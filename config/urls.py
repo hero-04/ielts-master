@@ -9,4 +9,7 @@ urlpatterns = [
     
     # Reading endpoints
     path('api/reading/', include('reading.urls', namespace='reading')),
+    
+    # Listening endpoints
+    path('api/listening/', include('listening.urls', namespace='listening')),
 ]
