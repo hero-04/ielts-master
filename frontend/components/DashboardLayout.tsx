@@ -20,6 +20,7 @@ const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Reading", href: "/reading", icon: Book },
   { name: "Listening", href: "/listening", icon: Headphones },
+  { name: "Vocabulary", href: "/vocabulary", icon: BookOpen },
   { name: "Writing", href: "/writing", icon: PenTool },
   { name: "Speaking", href: "/speaking", icon: Mic },
 ];
