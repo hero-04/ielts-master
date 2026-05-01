@@ -41,7 +41,7 @@ class ReadingTestListView(generics.ListAPIView):
     """
     queryset = ReadingTest.objects.all()
     serializer_class = ReadingTestListSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
 class ReadingTestDetailView(generics.RetrieveAPIView):
     """
@@ -51,7 +51,7 @@ class ReadingTestDetailView(generics.RetrieveAPIView):
     """
     queryset = ReadingTest.objects.all()
     serializer_class = ReadingTestDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

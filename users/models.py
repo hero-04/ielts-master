@@ -43,7 +43,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         SUPER_ADMIN = 'super_admin', 'Super Admin'
 
     # ── Core fields ──────────────────────────────────────────────
-    email = models.EmailField(unique=True, verbose_name='Email address')
+    from django.core.validators import RegexValidator
+    email = models.CharField(
+        max_length=255, 
+        unique=True, 
+        verbose_name='Email address',
+        validators=[RegexValidator(r'^[^@]+@[^@]+\.[^@]+$', message='Enter a valid email address.')]
+    )
     full_name = models.CharField(max_length=255, verbose_name='Full name')
 
     # ── Role & subscription ──────────────────────────────────────
