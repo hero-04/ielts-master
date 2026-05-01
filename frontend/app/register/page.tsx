@@ -27,10 +27,11 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await api.post("/users/register/", { 
+      await api.post("/auth/register/", { 
         full_name: fullName,
         email, 
-        password 
+        password,
+        password_confirm: confirmPassword
       });
       // After successful registration, redirect to login
       router.push("/login?registered=true");

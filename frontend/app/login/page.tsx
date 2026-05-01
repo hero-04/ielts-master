@@ -21,17 +21,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await api.post("/token/", { email, password });
-      // Depending on the backend response structure.
-      // Usually simplejwt returns access and refresh, and we might need to decode token for user info or fetch /users/me
-      const { access, refresh } = response.data;
+      const response = await api.post("/auth/login/", { email, password });
       
-      // Fetch user profile
-      const userResponse = await api.get("/users/me/", {
-        headers: { Authorization: `Bearer ${access}` }
-      });
+      const { access, refresh, user } = response.data;
       
-      setAuth(userResponse.data, access, refresh);
+      setAuth(user, access, refresh);
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Failed to log in. Please check your credentials.");
