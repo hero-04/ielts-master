@@ -12,4 +12,7 @@ urlpatterns = [
     
     # Listening endpoints
     path('api/listening/', include('listening.urls', namespace='listening')),
+    
+    # Vocabulary endpoints
+    path('api/vocabulary/', include('vocabulary.urls', namespace='vocabulary')),
 ]
