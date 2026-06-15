@@ -106,7 +106,9 @@ class ListeningTestSubmitView(APIView):
         
         return Response({
             'detail': 'Answers submitted successfully.',
-            'attempt_id': attempt.id
+            'attempt_id': attempt.id,
+            'band_score': attempt.band_score,
+            'raw_score': attempt.raw_score
         }, status=status.HTTP_201_CREATED)
 
 class ListeningAttemptResultView(generics.RetrieveAPIView):
