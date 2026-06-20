@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
-import { 
-  BookOpen, 
-  LayoutDashboard, 
-  Book, 
-  Headphones, 
-  PenTool, 
-  Mic, 
-  Settings, 
-  LogOut 
+import {
+  BookOpen,
+  LayoutDashboard,
+  Book,
+  Headphones,
+  PenTool,
+  Mic,
+  Settings,
+  LogOut,
+  History,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,6 +24,7 @@ const navItems = [
   { name: "Vocabulary", href: "/vocabulary", icon: BookOpen },
   { name: "Writing", href: "/writing", icon: PenTool },
   { name: "Speaking", href: "/speaking", icon: Mic },
+  { name: "My Tests", href: "/my-tests", icon: History },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

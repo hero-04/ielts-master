@@ -203,7 +203,7 @@ export default function ReadingTestPage() {
       if (response.data.attempt_id) {
         router.push(`/reading/results/${response.data.attempt_id}`);
       } else {
-        router.push("/dashboard/reading");
+        router.push("/reading");
       }
     } catch (err) {
       console.error("Failed to submit test", err);
@@ -342,7 +342,7 @@ export default function ReadingTestPage() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center">
           <p>{error || "Test not found"}</p>
-          <Link href="/dashboard/reading" className="inline-block mt-4 text-primary hover:underline">
+          <Link href="/reading" className="inline-block mt-4 text-primary hover:underline">
             ← Back to reading tests
           </Link>
         </div>

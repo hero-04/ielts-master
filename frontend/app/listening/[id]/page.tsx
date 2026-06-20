@@ -224,7 +224,7 @@ export default function ListeningTestPage() {
       <DashboardLayout>
         <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center">
           <p>{error || "Test not found"}</p>
-          <Link href="/dashboard/listening" className="inline-block mt-4 text-purple-600 hover:underline">
+          <Link href="/listening" className="inline-block mt-4 text-purple-600 hover:underline">
             ← Back to listening tests
           </Link>
         </div>
@@ -237,7 +237,7 @@ export default function ListeningTestPage() {
       <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-sm">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/dashboard/listening" className="text-purple-600 hover:underline flex items-center gap-1 mb-4">
+          <Link href="/listening" className="text-purple-600 hover:underline flex items-center gap-1 mb-4">
             <ArrowLeft className="w-4 h-4" /> Back to tests
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{test.title}</h1>
