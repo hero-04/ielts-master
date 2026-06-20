@@ -3,7 +3,8 @@ from .views import (
     ListeningTestListView,
     ListeningTestDetailView,
     ListeningTestSubmitView,
-    ListeningAttemptResultView
+    ListeningAttemptResultView,
+    ListeningAttemptListView,
 )
 
 app_name = 'listening'
@@ -12,5 +13,6 @@ urlpatterns = [
     path('tests/', ListeningTestListView.as_view(), name='test-list'),
     path('tests/<int:pk>/', ListeningTestDetailView.as_view(), name='test-detail'),
     path('tests/<int:pk>/submit/', ListeningTestSubmitView.as_view(), name='test-submit'),
+    path('attempts/', ListeningAttemptListView.as_view(), name='attempt-list'),
     path('attempts/<int:pk>/', ListeningAttemptResultView.as_view(), name='attempt-detail'),
 ]

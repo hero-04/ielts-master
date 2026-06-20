@@ -43,3 +43,11 @@ class ReadingAttemptResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingAttempt
         fields = ['id', 'test_id', 'test_title', 'started_at', 'completed_at', 'raw_score', 'band_score', 'answers']
+
+class ReadingAttemptListSerializer(serializers.ModelSerializer):
+    cambridge_book = serializers.IntegerField(source='test.cambridge_book', read_only=True)
+    test_number = serializers.IntegerField(source='test.test_number', read_only=True)
+
+    class Meta:
+        model = ReadingAttempt
+        fields = ['id', 'cambridge_book', 'test_number', 'band_score', 'raw_score', 'started_at', 'completed_at']

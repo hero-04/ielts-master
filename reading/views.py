@@ -8,7 +8,8 @@ from .serializers import (
     ReadingTestListSerializer,
     ReadingTestDetailSerializer,
     ReadingAttemptSubmitSerializer,
-    ReadingAttemptResultSerializer
+    ReadingAttemptResultSerializer,
+    ReadingAttemptListSerializer,
 )
 
 def calculate_reading_band(raw_score: int) -> float:
@@ -134,3 +135,15 @@ class ReadingAttemptResultView(generics.RetrieveAPIView):
     def get_queryset(self):
         # Users can only see their own results
         return self.queryset.filter(user=self.request.user)
+
+class ReadingAttemptListView(generics.ListAPIView):
+    serializer_class = ReadingAttemptListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            ReadingAttempt.objects
+            .filter(user=self.request.user, completed_at__isnull=False)
+            .select_related('test')
+            .order_by('-completed_at')
+        )

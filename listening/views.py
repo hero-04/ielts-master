@@ -8,7 +8,8 @@ from .serializers import (
     ListeningTestListSerializer,
     ListeningTestDetailSerializer,
     ListeningAttemptSubmitSerializer,
-    ListeningAttemptResultSerializer
+    ListeningAttemptResultSerializer,
+    ListeningAttemptListSerializer,
 )
 
 def calculate_listening_band(raw_score: int) -> float:
@@ -122,3 +123,15 @@ class ListeningAttemptResultView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+
+class ListeningAttemptListView(generics.ListAPIView):
+    serializer_class = ListeningAttemptListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            ListeningAttempt.objects
+            .filter(user=self.request.user, completed_at__isnull=False)
+            .select_related('test')
+            .order_by('-completed_at')
+        )
