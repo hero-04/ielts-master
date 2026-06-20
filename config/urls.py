@@ -20,6 +20,9 @@ urlpatterns = [
 
     # Writing endpoints
     path('api/writing/', include('writing.urls', namespace='writing')),
+
+    # Speaking endpoints
+    path('api/speaking/', include('speaking.urls', namespace='speaking')),
 ]
 
 if settings.DEBUG:
