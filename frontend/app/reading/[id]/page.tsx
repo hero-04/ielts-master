@@ -268,7 +268,7 @@ export default function ReadingTestPage() {
   const paragraphs = passageText?.split('\n\n') || [];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
+    <div className="h-screen overflow-hidden bg-white flex flex-col font-sans">
       {/* Top Header - CD IELTS Style */}
       <header className="bg-[#1a3a5f] text-white flex items-center justify-between px-6 py-3 shrink-0 shadow-md z-10">
         <div className="flex items-center gap-4">
