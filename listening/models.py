@@ -1,14 +1,11 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class ListeningTest(models.Model):
-    class Difficulty(models.TextChoices):
-        EASY = 'easy', 'Easy'
-        MEDIUM = 'medium', 'Medium'
-        HARD = 'hard', 'Hard'
-
     title = models.CharField(max_length=255)
-    difficulty = models.CharField(max_length=20, choices=Difficulty.choices, default=Difficulty.MEDIUM)
+    cambridge_book = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     audio_url = models.URLField(max_length=500, verbose_name='Audio URL')
     transcript = models.TextField(blank=True, null=True, verbose_name='Transcript')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,9 +13,10 @@ class ListeningTest(models.Model):
     class Meta:
         db_table = 'listening_tests'
         ordering = ['-created_at']
+        unique_together = [['cambridge_book', 'test_number']]
 
     def __str__(self):
-        return f"{self.title} ({self.get_difficulty_display()})"
+        return f"Cambridge {self.cambridge_book} - Test {self.test_number}"
 
 
 class ListeningQuestion(models.Model):

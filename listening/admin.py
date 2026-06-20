@@ -7,9 +7,9 @@ class ListeningQuestionInline(admin.StackedInline):
 
 @admin.register(ListeningTest)
 class ListeningTestAdmin(admin.ModelAdmin):
-    list_display = ('title', 'difficulty', 'created_at')
+    list_display = ('title', 'cambridge_book', 'test_number', 'created_at')
     search_fields = ('title',)
-    list_filter = ('difficulty',)
+    list_filter = ('cambridge_book', 'test_number')
     inlines = [ListeningQuestionInline]
 
 @admin.register(ListeningQuestion)

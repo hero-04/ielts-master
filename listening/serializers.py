@@ -9,14 +9,14 @@ class ListeningQuestionSerializer(serializers.ModelSerializer):
 class ListeningTestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListeningTest
-        fields = ['id', 'title', 'difficulty', 'created_at']
+        fields = ['id', 'title', 'cambridge_book', 'test_number', 'created_at']
 
 class ListeningTestDetailSerializer(serializers.ModelSerializer):
     questions = ListeningQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = ListeningTest
-        fields = ['id', 'title', 'difficulty', 'audio_url', 'transcript', 'questions', 'created_at']
+        fields = ['id', 'title', 'cambridge_book', 'test_number', 'audio_url', 'transcript', 'questions', 'created_at']
 
 class ListeningAnswerSubmissionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()

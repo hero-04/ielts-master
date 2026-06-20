@@ -10,14 +10,14 @@ class ReadingQuestionSerializer(serializers.ModelSerializer):
 class ReadingTestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingTest
-        fields = ['id', 'title', 'difficulty', 'created_at']
+        fields = ['id', 'title', 'cambridge_book', 'test_number', 'created_at']
 
 class ReadingTestDetailSerializer(serializers.ModelSerializer):
     questions = ReadingQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = ReadingTest
-        fields = ['id', 'title', 'difficulty', 'passage_a', 'passage_b', 'passage_c', 'questions', 'created_at']
+        fields = ['id', 'title', 'cambridge_book', 'test_number', 'passage_a', 'passage_b', 'passage_c', 'questions', 'created_at']
 
 class ReadingAnswerSubmissionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
