@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Clock, ArrowLeft, ArrowRight, Settings, HelpCircle, CheckSquare } from "lucide-react";
+import { Clock, ArrowLeft, ArrowRight, Settings, HelpCircle, CheckSquare, Highlighter, X } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
@@ -38,6 +38,12 @@ export default function ReadingTestPage() {
   const [fontSize, setFontSize] = useState("text-base");
   const [activePassage, setActivePassage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [highlights, setHighlights] = useState<Record<string, { start: number; end: number }[]>>({});
+  const [pendingSelection, setPendingSelection] = useState<{
+    paraIndex: number; start: number; end: number; top: number; left: number;
+  } | null>(null);
+
+  const toolbarRef = useRef<HTMLDivElement>(null);
 
   // Загрузка теста из API
   useEffect(() => {
@@ -65,6 +71,16 @@ export default function ReadingTestPage() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
+        setPendingSelection(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -73,6 +89,86 @@ export default function ReadingTestPage() {
 
   const handleAnswerChange = (qId: number, val: string) => {
     setAnswers({ ...answers, [qId]: val });
+  };
+
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.rangeCount) return;
+
+    const getParagraphEl = (node: Node | null): Element | null => {
+      while (node) {
+        if (node.nodeType === Node.ELEMENT_NODE && (node as Element).hasAttribute('data-paragraph-index'))
+          return node as Element;
+        node = node.parentNode;
+      }
+      return null;
+    };
+
+    const anchorPara = getParagraphEl(selection.anchorNode);
+    const focusPara = getParagraphEl(selection.focusNode);
+    if (!anchorPara || anchorPara !== focusPara) return;
+
+    const paraIndex = parseInt(anchorPara.getAttribute('data-paragraph-index') || '0');
+
+    const getOffset = (container: Element, targetNode: Node, targetOffset: number): number => {
+      let offset = 0;
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        if (walker.currentNode === targetNode) return offset + targetOffset;
+        offset += walker.currentNode.textContent?.length ?? 0;
+      }
+      return offset + targetOffset;
+    };
+
+    const a = getOffset(anchorPara, selection.anchorNode!, selection.anchorOffset);
+    const b = getOffset(anchorPara, selection.focusNode!, selection.focusOffset);
+    const start = Math.min(a, b);
+    const end = Math.max(a, b);
+    if (start === end) return;
+
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    setPendingSelection({
+      paraIndex,
+      start,
+      end,
+      top: rect.top - 48,
+      left: rect.left + rect.width / 2,
+    });
+  };
+
+  const applyHighlight = () => {
+    if (!pendingSelection) return;
+    const { paraIndex, start, end } = pendingSelection;
+    const key = `${activePassage}-${paraIndex}`;
+    setHighlights(prev => ({ ...prev, [key]: [...(prev[key] ?? []), { start, end }] }));
+    setPendingSelection(null);
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const removeHighlight = () => {
+    if (!pendingSelection) return;
+    const { paraIndex, start, end } = pendingSelection;
+    const key = `${activePassage}-${paraIndex}`;
+    setHighlights(prev => ({
+      ...prev,
+      [key]: (prev[key] ?? []).filter(r => r.end <= start || r.start >= end),
+    }));
+    setPendingSelection(null);
+    window.getSelection()?.removeAllRanges();
+  };
+
+  const renderHighlightedParagraph = (text: string, ranges: { start: number; end: number }[]) => {
+    if (!ranges.length) return text;
+    const sorted = [...ranges].sort((a, b) => a.start - b.start);
+    const out: (string | JSX.Element)[] = [];
+    let cursor = 0;
+    for (const r of sorted) {
+      if (r.start > cursor) out.push(text.slice(cursor, r.start));
+      out.push(<mark key={`${r.start}-${r.end}`} className="bg-yellow-200 rounded-sm">{text.slice(r.start, r.end)}</mark>);
+      cursor = Math.max(cursor, r.end);
+    }
+    if (cursor < text.length) out.push(text.slice(cursor));
+    return out;
   };
 
   // Парсинг вариантов для Multiple Choice
@@ -303,11 +399,23 @@ export default function ReadingTestPage() {
         <div className="flex-1 flex flex-col border-r border-gray-300 bg-white m-2 rounded-xl shadow-sm overflow-hidden">
           <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0 flex justify-between items-center">
             <h2 className="font-bold text-gray-800">Passage {activePassage}</h2>
+            <button
+              onClick={() => setHighlights(prev => {
+                const next = { ...prev };
+                Object.keys(next).filter(k => k.startsWith(`${activePassage}-`)).forEach(k => delete next[k]);
+                return next;
+              })}
+              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear Highlights
+            </button>
           </div>
-          <div className={`p-8 overflow-y-auto ${fontSize} leading-relaxed text-gray-800 text-justify font-serif`}>
+          <div className={`p-8 overflow-y-auto ${fontSize} leading-relaxed text-gray-800 text-justify font-serif`} onMouseUp={handleMouseUp}>
             <h1 className="text-2xl font-bold text-center mb-8">{test.title}</h1>
             {paragraphs.map((paragraph, i) => (
-              <p key={i} className="mb-6 indent-8">{paragraph}</p>
+              <p key={i} data-paragraph-index={i} className="mb-6 indent-8">
+                {renderHighlightedParagraph(paragraph, highlights[`${activePassage}-${i}`] ?? [])}
+              </p>
             ))}
           </div>
         </div>
@@ -354,6 +462,32 @@ export default function ReadingTestPage() {
           </button>
         </div>
       </footer>
+
+      {pendingSelection && (
+        <div
+          ref={toolbarRef}
+          style={{ position: 'fixed', top: pendingSelection.top, left: pendingSelection.left, transform: 'translateX(-50%)', zIndex: 50 }}
+          className="bg-gray-900 text-white rounded-lg shadow-xl flex items-center gap-1 px-2 py-1.5 select-none"
+        >
+          <button
+            onMouseDown={e => e.preventDefault()}
+            onClick={applyHighlight}
+            className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium transition-colors"
+          >
+            <Highlighter className="w-3.5 h-3.5 text-yellow-300" />
+            Highlight
+          </button>
+          <div className="w-px h-4 bg-gray-600" />
+          <button
+            onMouseDown={e => e.preventDefault()}
+            onClick={removeHighlight}
+            className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium transition-colors"
+          >
+            <X className="w-3.5 h-3.5 text-red-400" />
+            Remove
+          </button>
+        </div>
+      )}
     </div>
   );
 }
