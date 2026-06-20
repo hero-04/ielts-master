@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class VocabularyWord(models.Model):
     class Topic(models.TextChoices):
@@ -24,6 +25,7 @@ class VocabularyWord(models.Model):
     example_sentence = models.TextField()
     topic = models.CharField(max_length=50, choices=Topic.choices)
     difficulty = models.CharField(max_length=20, choices=Difficulty.choices, default=Difficulty.MEDIUM)
+    cambridge_book = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)], db_index=True)
     audio_url = models.URLField(max_length=500, blank=True, null=True, verbose_name='Audio Pronunciation')
     
     created_at = models.DateTimeField(auto_now_add=True)

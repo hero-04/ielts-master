@@ -3,8 +3,8 @@ from .models import VocabularyWord, UserWordProgress
 
 @admin.register(VocabularyWord)
 class VocabularyWordAdmin(admin.ModelAdmin):
-    list_display = ('word', 'topic', 'difficulty', 'created_at')
-    list_filter = ('topic', 'difficulty')
+    list_display = ('word', 'topic', 'difficulty', 'cambridge_book', 'created_at')
+    list_filter = ('topic', 'difficulty', 'cambridge_book')
     search_fields = ('word', 'definition')
     ordering = ('word',)
 

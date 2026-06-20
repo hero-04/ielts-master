@@ -4,7 +4,7 @@ from .models import VocabularyWord, UserWordProgress
 class VocabularyWordSerializer(serializers.ModelSerializer):
     class Meta:
         model = VocabularyWord
-        fields = ['id', 'word', 'definition', 'example_sentence', 'topic', 'difficulty', 'audio_url']
+        fields = ['id', 'word', 'definition', 'example_sentence', 'topic', 'difficulty', 'cambridge_book', 'audio_url']
 
 class UserWordProgressSerializer(serializers.ModelSerializer):
     word_details = VocabularyWordSerializer(source='word', read_only=True)
