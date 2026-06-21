@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Clock, ArrowLeft, ArrowRight, Settings, HelpCircle, CheckSquare, Highlighter, X } from "lucide-react";
+import { Clock, ChevronLeft, ChevronRight, Settings, HelpCircle, CheckSquare, Highlighter, X } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
 interface ReadingQuestion {
   id: number;
+  passage: string;
   question_type: string;
   question_text: string;
   correct_answer: string;
@@ -38,12 +39,14 @@ export default function ReadingTestPage() {
   const [fontSize, setFontSize] = useState("text-base");
   const [activePassage, setActivePassage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [focusedOrderNumber, setFocusedOrderNumber] = useState<number | null>(null);
   const [highlights, setHighlights] = useState<Record<string, { start: number; end: number }[]>>({});
   const [pendingSelection, setPendingSelection] = useState<{
     paraIndex: number; start: number; end: number; top: number; left: number;
   } | null>(null);
 
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const questionRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Загрузка теста из API
   useEffect(() => {
@@ -80,6 +83,16 @@ export default function ReadingTestPage() {
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
+
+  useEffect(() => {
+    if (focusedOrderNumber === null || !test) return;
+    const letter = ({ 1: 'A', 2: 'B', 3: 'C' } as Record<number, string>)[activePassage];
+    const q = test.questions.filter(q => q.passage === letter)
+                            .find(q => q.order_number === focusedOrderNumber);
+    if (q && questionRefs.current[q.id]) {
+      questionRefs.current[q.id]!.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [focusedOrderNumber, activePassage, test]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -350,6 +363,44 @@ export default function ReadingTestPage() {
     );
   }
 
+  const passageLetterMap: Record<number, string> = { 1: 'A', 2: 'B', 3: 'C' };
+
+  const getPassageQuestions = (passage: number) =>
+    (test?.questions ?? [])
+      .filter(q => q.passage === passageLetterMap[passage])
+      .sort((a, b) => a.order_number - b.order_number);
+
+  const navigate = (dir: 'prev' | 'next') => {
+    if (!test) return;
+    const qs = getPassageQuestions(activePassage);
+    const currentIdx = qs.findIndex(q => q.order_number === focusedOrderNumber);
+    if (dir === 'next') {
+      if (currentIdx === -1 || currentIdx < qs.length - 1) {
+        const target = currentIdx === -1 ? qs[0] : qs[currentIdx + 1];
+        if (target) setFocusedOrderNumber(target.order_number);
+      } else if (activePassage < 3) {
+        const nextQs = getPassageQuestions(activePassage + 1);
+        setActivePassage(p => p + 1);
+        if (nextQs[0]) setFocusedOrderNumber(nextQs[0].order_number);
+      }
+    } else {
+      if (currentIdx > 0) {
+        setFocusedOrderNumber(qs[currentIdx - 1].order_number);
+      } else if (activePassage > 1) {
+        const prevQs = getPassageQuestions(activePassage - 1);
+        setActivePassage(p => p - 1);
+        const last = prevQs[prevQs.length - 1];
+        if (last) setFocusedOrderNumber(last.order_number);
+      }
+    }
+  };
+
+  const passageQuestions = getPassageQuestions(activePassage);
+  const currentQIdx = passageQuestions.findIndex(q => q.order_number === focusedOrderNumber);
+  const isPrevDisabled = activePassage === 1 && currentQIdx <= 0;
+  const isNextDisabled = activePassage === 3 &&
+    currentQIdx === passageQuestions.length - 1 && currentQIdx >= 0;
+
   // Получаем текущий текст пассажа
   const getCurrentPassageText = () => {
     switch(activePassage) {
@@ -426,9 +477,18 @@ export default function ReadingTestPage() {
             <h2 className="font-bold text-gray-800">Questions</h2>
           </div>
           <div className="p-8 overflow-y-auto text-base text-gray-800 space-y-8">
-            {test.questions?.map((question, idx) => (
-              <div key={question.id} className="p-4 bg-blue-50/30 rounded-xl border border-blue-100">
-                {renderQuestion(question, idx)}
+            {passageQuestions.map((question) => (
+              <div
+                key={question.id}
+                ref={el => { questionRefs.current[question.id] = el; }}
+                onClick={() => setFocusedOrderNumber(question.order_number)}
+                className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                  focusedOrderNumber === question.order_number
+                    ? 'bg-blue-50 border-l-4 border-primary'
+                    : 'bg-blue-50/30 border-blue-100 hover:border-blue-200'
+                }`}
+              >
+                {renderQuestion(question, question.order_number - 1)}
               </div>
             ))}
           </div>
@@ -438,28 +498,31 @@ export default function ReadingTestPage() {
       {/* Bottom Navigation */}
       <footer className="bg-white border-t border-gray-300 p-4 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div />
+
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setActivePassage(Math.max(1, activePassage - 1))}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded font-medium transition-colors"
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold transition-colors shadow-sm disabled:opacity-50"
             >
-              <ArrowLeft className="w-5 h-5" /> Previous
+              <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
             </button>
-            <button 
-              onClick={() => setActivePassage(Math.min(3, activePassage + 1))}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded font-medium transition-colors"
+            <button
+              onClick={() => navigate('prev')}
+              disabled={isPrevDisabled}
+              className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Next <ArrowRight className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => navigate('next')}
+              disabled={isNextDisabled}
+              className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
-
-          <button 
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold transition-colors shadow-sm disabled:opacity-50"
-          >
-            <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
-          </button>
         </div>
       </footer>
 
