@@ -15,7 +15,12 @@ class WritingPromptDetailSerializer(serializers.ModelSerializer):
 
 
 class WritingSubmissionSerializer(serializers.ModelSerializer):
+    prompt_cambridge_book = serializers.IntegerField(source='prompt.cambridge_book', read_only=True)
+    prompt_test_number = serializers.IntegerField(source='prompt.test_number', read_only=True)
+    prompt_task_type = serializers.CharField(source='prompt.task_type', read_only=True)
+
     class Meta:
         model = WritingSubmission
-        fields = ['id', 'prompt', 'submission_text', 'word_count', 'created_at']
+        fields = ['id', 'prompt', 'submission_text', 'word_count', 'created_at',
+                  'prompt_cambridge_book', 'prompt_test_number', 'prompt_task_type']
         read_only_fields = ['word_count', 'created_at']
