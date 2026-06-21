@@ -4,7 +4,7 @@ from .models import ListeningTest, ListeningQuestion, ListeningAttempt, Listenin
 class ListeningQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListeningQuestion
-        fields = ['id', 'section', 'question_type', 'question_text', 'order_number']
+        fields = ['id', 'section', 'question_type', 'question_text', 'order_number', 'options', 'question_group']
 
 class ListeningTestListSerializer(serializers.ModelSerializer):
     class Meta:

@@ -18,6 +18,8 @@ class ListeningQuestionAdmin(admin.ModelAdmin):
     list_filter = ('test', 'section', 'question_type')
     search_fields = ('question_text',)
     ordering = ('test', 'order_number')
+    fields = ('test', 'section', 'question_type', 'question_text', 'correct_answer',
+              'order_number', 'options', 'question_group')
 
 class ListeningAnswerInline(admin.TabularInline):
     model = ListeningAnswer

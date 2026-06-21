@@ -39,6 +39,9 @@ class ListeningQuestion(models.Model):
         FORM_COMPLETION = 'form_completion', 'Form Completion'
         TABLE_COMPLETION = 'table_completion', 'Table Completion'
         DIAGRAM_LABELLING = 'diagram_labelling', 'Diagram Labelling'
+        DRAG_DROP = 'drag_drop', 'Drag & Drop'
+        SELECTION_GRID = 'selection_grid', 'Selection Grid'
+        MATCHING = 'matching', 'Matching'
 
     test = models.ForeignKey(ListeningTest, on_delete=models.CASCADE, related_name='questions')
     section = models.IntegerField(choices=Section.choices)
@@ -46,6 +49,8 @@ class ListeningQuestion(models.Model):
     question_text = models.TextField()
     correct_answer = models.CharField(max_length=255, help_text="Can be multiple comma-separated answers if needed")
     order_number = models.PositiveIntegerField()
+    options = models.JSONField(default=list, blank=True)
+    question_group = models.CharField(max_length=50, blank=True, default='')
 
     class Meta:
         db_table = 'listening_questions'
