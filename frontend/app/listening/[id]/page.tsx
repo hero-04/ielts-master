@@ -14,6 +14,7 @@ interface ListeningQuestion {
   correct_answer: string;
   options?: string[];
   order_number: number;
+  question_group?: string;
 }
 
 interface ListeningTest {
@@ -94,7 +95,6 @@ export default function ListeningTestPage() {
     }
   };
 
-  // Функция для парсинга вариантов ответов из текста вопроса
   const parseOptions = (questionText: string): string[] => {
     const match = questionText.match(/[A-D]\)\s*[^A-D]*?(?=[A-D]\)|$)/gs);
     if (match) {
@@ -103,58 +103,126 @@ export default function ListeningTestPage() {
     return [];
   };
 
-  // Очищаем текст вопроса от вариантов ответов
   const cleanQuestionText = (questionText: string): string => {
     return questionText.replace(/[A-D]\)\s*[^A-D]*?(?=[A-D]\)|$)/gs, '').trim();
   };
 
-  // Определяем тип вопроса и показываем нужный UI
   const renderQuestion = (question: ListeningQuestion, idx: number) => {
+    // Drag & Drop — inline drop zone + word bank
+    if (question.question_type === 'drag_drop') {
+      const currentAnswer = answers[question.id] || '';
+      const wordBank = question.options || [];
+      const BLANK_RE = /_{3,}|\[BLANK\]/;
+      const parts = question.question_text.split(BLANK_RE);
+      const hasBlank = parts.length > 1;
+
+      const dropZone = (
+        <span
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            handleAnswerChange(question.id, e.dataTransfer.getData('text/plain'));
+          }}
+          className={`inline-flex items-center gap-1 mx-1 px-3 py-0.5 rounded border-2 border-dashed text-sm align-middle transition-colors ${
+            currentAnswer
+              ? 'border-purple-400 bg-purple-50'
+              : 'border-gray-400 bg-white min-w-[80px]'
+          }`}
+        >
+          {currentAnswer ? (
+            <>
+              <span className="text-purple-700 font-medium">{currentAnswer}</span>
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleAnswerChange(question.id, '')}
+                className="text-gray-400 hover:text-red-500 leading-none"
+              >
+                ×
+              </button>
+            </>
+          ) : (
+            <span className="text-gray-400 italic">drop here</span>
+          )}
+        </span>
+      );
+
+      return (
+        <div>
+          <p className="font-medium text-gray-900 mb-4 leading-relaxed">
+            {idx + 1}.{' '}
+            {hasBlank ? (
+              <>
+                {parts[0]}{dropZone}{parts.slice(1).join('')}
+              </>
+            ) : (
+              <>{question.question_text} {dropZone}</>
+            )}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {wordBank.map((word, wIdx) => {
+              const used = currentAnswer === word;
+              return (
+                <span
+                  key={wIdx}
+                  draggable={!used}
+                  onDragStart={(e) => e.dataTransfer.setData('text/plain', word)}
+                  className={`rounded-full px-3 py-1 text-sm border select-none transition-opacity ${
+                    used
+                      ? 'bg-gray-100 border-gray-200 text-gray-300 opacity-40 cursor-not-allowed'
+                      : 'bg-gray-100 border-gray-200 text-gray-700 cursor-grab hover:bg-purple-50 hover:border-purple-300'
+                  }`}
+                >
+                  {word}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     const options = parseOptions(question.question_text);
     const cleanText = cleanQuestionText(question.question_text);
     const isMultipleChoice = options.length > 0;
     const isTrueFalse = question.question_type === 'tfng' || question.question_type === 'ynng';
     const isFormCompletion = question.question_type === 'form_completion' || question.question_type === 'table_completion' || question.question_type === 'short_answer';
 
-    // Multiple Choice — красивые кнопки A, B, C, D
-    // Multiple Choice — красивые кнопки A, B, C, D
-  if (isMultipleChoice) {
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-    const questionText = cleanText || question.question_text.split(/[A-D]\)/)[0];
+    if (isMultipleChoice) {
+      const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+      const questionText = cleanText || question.question_text.split(/[A-D]\)/)[0];
 
-    return (
-      <div>
-        <p className="font-medium text-gray-900 mb-3">
-          {idx + 1}. {questionText}
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-          {options.map((option, optIdx) => {
-            const letter = letters[optIdx];
-            const isSelected = answers[question.id] === letter;
-            const optionText = option.replace(/^[A-D]\)\s*/, '');
+      return (
+        <div>
+          <p className="font-medium text-gray-900 mb-3">
+            {idx + 1}. {questionText}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+            {options.map((option, optIdx) => {
+              const letter = letters[optIdx];
+              const isSelected = answers[question.id] === letter;
+              const optionText = option.replace(/^[A-D]\)\s*/, '');
 
-            return (
-              <button
-                key={optIdx}
-                onClick={() => handleAnswerChange(question.id, letter)}
-                className={`p-3 text-left border rounded-lg ${
-                  isSelected
-                    ? "border-purple-600 bg-purple-50 text-purple-700 ring-2 ring-purple-200 opacity-100"
-                    : "border-gray-200 bg-white text-gray-900 opacity-100 hover:border-purple-300 hover:bg-gray-50"
-                }`}
-                style={{ opacity: 1, transition: "none" }}
-              >
-                <span className="font-bold mr-2 text-inherit">{letter}.</span>
-                <span className="text-inherit">{optionText}</span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={optIdx}
+                  onClick={() => handleAnswerChange(question.id, letter)}
+                  className={`p-3 text-left border rounded-lg ${
+                    isSelected
+                      ? "border-purple-600 bg-purple-50 text-purple-700 ring-2 ring-purple-200 opacity-100"
+                      : "border-gray-200 bg-white text-gray-900 opacity-100 hover:border-purple-300 hover:bg-gray-50"
+                  }`}
+                  style={{ opacity: 1, transition: "none" }}
+                >
+                  <span className="font-bold mr-2 text-inherit">{letter}.</span>
+                  <span className="text-inherit">{optionText}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-    // True/False/Not Given — красивые кнопки
     if (isTrueFalse) {
       const tfOptions = [
         { value: "True", label: "✅ True", color: "green" },
@@ -185,7 +253,6 @@ export default function ListeningTestPage() {
       );
     }
 
-    // Form / Table / Short Answer Completion — поле ввода
     if (isFormCompletion) {
       return (
         <div>
@@ -203,7 +270,6 @@ export default function ListeningTestPage() {
       );
     }
 
-    // Default — обычное поле ввода
     return (
       <div>
         <p className="font-medium text-gray-900 mb-3">
@@ -266,7 +332,7 @@ export default function ListeningTestPage() {
       {/* Main — two panels */}
       <main className="flex-1 flex overflow-hidden bg-[#f0f2f5]">
 
-        {/* Left Panel: Questions for active section */}
+        {/* Left Panel: Questions */}
         <div className="flex-1 flex flex-col border-r border-gray-300 bg-white m-2 rounded-xl shadow-sm overflow-hidden">
           <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0">
             <h2 className="font-bold text-gray-800">Questions</h2>
@@ -293,7 +359,7 @@ export default function ListeningTestPage() {
           </div>
         </div>
 
-        {/* Right Panel: Audio player + transcript placeholder */}
+        {/* Right Panel: Audio player */}
         <div className="flex-1 flex flex-col bg-white m-2 rounded-xl shadow-sm overflow-hidden ml-0">
           <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0">
             <h2 className="font-bold text-gray-800">Audio Player</h2>
