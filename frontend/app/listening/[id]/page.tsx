@@ -3,8 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Clock, Headphones, ArrowLeft } from "lucide-react";
+import { Clock, Headphones, CheckSquare } from "lucide-react";
 import Link from "next/link";
 
 interface ListeningQuestion {
@@ -20,7 +19,8 @@ interface ListeningQuestion {
 interface ListeningTest {
   id: number;
   title: string;
-  difficulty: string;
+  cambridge_book: number;
+  test_number: number;
   audio_url: string;
   transcript: string;
   questions: ListeningQuestion[];
@@ -33,6 +33,7 @@ export default function ListeningTestPage() {
   const [error, setError] = useState("");
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(40 * 60);
 
   useEffect(() => {
     if (id) {
@@ -50,6 +51,19 @@ export default function ListeningTestPage() {
       fetchTest();
     }
   }, [id]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   const handleAnswerChange = (questionId: number, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -107,7 +121,7 @@ export default function ListeningTestPage() {
   if (isMultipleChoice) {
     const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
     const questionText = cleanText || question.question_text.split(/[A-D]\)/)[0];
-    
+
     return (
       <div>
         <p className="font-medium text-gray-900 mb-3">
@@ -118,7 +132,7 @@ export default function ListeningTestPage() {
             const letter = letters[optIdx];
             const isSelected = answers[question.id] === letter;
             const optionText = option.replace(/^[A-D]\)\s*/, '');
-            
+
             return (
               <button
                 key={optIdx}
@@ -208,89 +222,115 @@ export default function ListeningTestPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading test...</p>
-          </div>
+      <div className="h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading test...</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   if (error || !test) {
     return (
-      <DashboardLayout>
+      <div className="h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center">
           <p>{error || "Test not found"}</p>
           <Link href="/listening" className="inline-block mt-4 text-purple-600 hover:underline">
             ← Back to listening tests
           </Link>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-sm">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/listening" className="text-purple-600 hover:underline flex items-center gap-1 mb-4">
-            <ArrowLeft className="w-4 h-4" /> Back to tests
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{test.title}</h1>
-          <div className="flex gap-4 text-gray-600">
-            <span className="flex items-center gap-1">
-              <Headphones className="w-4 h-4" /> {test.difficulty}
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4" /> 40 minutes
-            </span>
+    <div className="h-screen overflow-hidden bg-white flex flex-col font-sans">
+      {/* Header */}
+      <header className="bg-[#1a3a5f] text-white flex items-center justify-between px-6 py-3 shrink-0 shadow-md z-10">
+        <div className="flex items-center gap-4">
+          <div className="font-bold text-xl tracking-wide">IELTS</div>
+          <div className="h-6 w-[1px] bg-white/30" />
+          <div className="text-sm">Listening</div>
+          <div className="h-6 w-[1px] bg-white/30" />
+          <div className="text-sm text-gray-300">
+            Cambridge {test.cambridge_book} • Test {test.test_number}
+          </div>
+        </div>
+        <div className={`flex items-center gap-2 font-mono text-xl font-bold bg-black/20 px-4 py-1.5 rounded ${timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+          <Clock className="w-5 h-5" />
+          {formatTime(timeLeft)}
+        </div>
+      </header>
+
+      {/* Main — two panels */}
+      <main className="flex-1 flex overflow-hidden bg-[#f0f2f5]">
+
+        {/* Left Panel: Questions for active section */}
+        <div className="flex-1 flex flex-col border-r border-gray-300 bg-white m-2 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0">
+            <h2 className="font-bold text-gray-800">Questions</h2>
+          </div>
+          <div className="flex-1 p-8 overflow-y-auto">
+            {[1, 2, 3, 4].map((section) => {
+              const qs = test.questions?.filter(q => q.section === section) || [];
+              if (qs.length === 0) return null;
+              return (
+                <div key={section}>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 border-l-4 border-purple-600 pl-3">
+                    Section {section}
+                  </h3>
+                  <div className="space-y-6 mb-8">
+                    {qs.map((question, idx) => (
+                      <div key={question.id} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+                        {renderQuestion(question, idx + 1)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Audio Player */}
-        {test.audio_url && (
-          <div className="mb-8 p-4 bg-gray-100 rounded-xl border border-gray-200">
-            <audio controls className="w-full">
-              <source src={test.audio_url} type="audio/mpeg" />
-              Your browser does not support the audio element.
-            </audio>
+        {/* Right Panel: Audio player + transcript placeholder */}
+        <div className="flex-1 flex flex-col bg-white m-2 rounded-xl shadow-sm overflow-hidden ml-0">
+          <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0">
+            <h2 className="font-bold text-gray-800">Audio Player</h2>
           </div>
-        )}
-
-        {/* Questions by Section */}
-        {[1, 2, 3, 4].map((section) => {
-          const sectionQuestions = test.questions?.filter(q => q.section === section) || [];
-          if (sectionQuestions.length === 0) return null;
-          
-          return (
-            <div key={section} className="mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 border-l-4 border-purple-600 pl-3">
-                Section {section}
-              </h2>
-              <div className="space-y-6">
-                {sectionQuestions.map((question, idx) => (
-                  <div key={question.id} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
-                    {renderQuestion(question, idx + 1)}
-                  </div>
-                ))}
+          <div className="flex-1 p-8 overflow-y-auto">
+            {test.audio_url ? (
+              <div className="p-4 bg-gray-100 rounded-xl border border-gray-200">
+                <audio controls className="w-full">
+                  <source src={test.audio_url} type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
               </div>
-            </div>
-          );
-        })}
+            ) : (
+              <div className="flex items-center justify-center h-24 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                <div className="text-center text-gray-400">
+                  <Headphones className="w-8 h-8 mx-auto mb-2" />
+                  <p className="text-sm">No audio available</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
 
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="mt-8 w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50"
-        >
-          {submitting ? "Submitting..." : "Submit Test"}
-        </button>
-      </div>
-    </DashboardLayout>
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-300 p-4 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <div />
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold transition-colors shadow-sm disabled:opacity-50"
+          >
+            <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
+          </button>
+        </div>
+      </footer>
+    </div>
   );
 }
