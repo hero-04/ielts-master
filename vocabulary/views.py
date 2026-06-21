@@ -34,7 +34,7 @@ class VocabularyWordListView(generics.ListAPIView):
     serializer_class = VocabularyWordSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['topic', 'difficulty']
+    filterset_fields = ['topic', 'difficulty', 'cambridge_book']
 
 class DailyReviewWordsView(generics.ListAPIView):
     """
