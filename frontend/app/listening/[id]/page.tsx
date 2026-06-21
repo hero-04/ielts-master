@@ -181,6 +181,39 @@ export default function ListeningTestPage() {
       );
     }
 
+    // Selection Grid — lettered option grid
+    if (question.question_type === 'selection_grid') {
+      const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+      const wordBank = question.options || [];
+      return (
+        <div>
+          <p className="font-medium text-gray-900 mb-3">
+            {idx + 1}. {question.question_text}
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+            {wordBank.map((option, optIdx) => {
+              const letter = letters[optIdx];
+              const isSelected = answers[question.id] === letter;
+              return (
+                <button
+                  key={optIdx}
+                  onClick={() => handleAnswerChange(question.id, letter)}
+                  className={`p-3 text-left border rounded-lg ${
+                    isSelected
+                      ? 'border-purple-600 bg-purple-50 text-purple-700 ring-2 ring-purple-200'
+                      : 'border-gray-200 bg-white text-gray-900 hover:border-purple-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="font-bold mr-2">{letter}.</span>
+                  <span>{option}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     const options = parseOptions(question.question_text);
     const cleanText = cleanQuestionText(question.question_text);
     const isMultipleChoice = options.length > 0;
