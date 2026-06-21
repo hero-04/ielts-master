@@ -319,6 +319,63 @@ export default function ListeningTestPage() {
     );
   };
 
+  const renderMatchingTable = (matchingQuestions: ListeningQuestion[]) => {
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+    const optionLabels = matchingQuestions[0]?.options || [];
+
+    return (
+      <div>
+        <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1">
+          {optionLabels.map((opt, i) => (
+            <span key={i} className="text-sm text-gray-600">
+              <span className="font-bold text-gray-800">{letters[i]}.</span> {opt}
+            </span>
+          ))}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="text-left py-2 px-3 font-semibold text-gray-700 border border-gray-200">Question</th>
+                {optionLabels.map((_, i) => (
+                  <th key={i} className="text-center py-2 px-3 font-semibold text-gray-700 border border-gray-200 w-12">
+                    {letters[i]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {matchingQuestions.map((question) => {
+                const selected = answers[question.id];
+                return (
+                  <tr key={question.id} className="hover:bg-gray-50">
+                    <td className="py-3 px-3 text-gray-900 border border-gray-200">
+                      {question.order_number}. {question.question_text}
+                    </td>
+                    {optionLabels.map((_, i) => {
+                      const letter = letters[i];
+                      return (
+                        <td key={i} className="py-3 px-3 text-center border border-gray-200">
+                          <input
+                            type="radio"
+                            name={`matching-${question.id}`}
+                            checked={selected === letter}
+                            onChange={() => handleAnswerChange(question.id, letter)}
+                            className="w-4 h-4 accent-purple-600 cursor-pointer"
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="h-screen bg-gray-100 flex items-center justify-center">
@@ -380,11 +437,40 @@ export default function ListeningTestPage() {
                     Section {section}
                   </h3>
                   <div className="space-y-6 mb-8">
-                    {qs.map((question, idx) => (
-                      <div key={question.id} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
-                        {renderQuestion(question, idx + 1)}
-                      </div>
-                    ))}
+                    {(() => {
+                      const grouped: Array<ListeningQuestion | ListeningQuestion[]> = [];
+                      let i = 0;
+                      while (i < qs.length) {
+                        const q = qs[i];
+                        if (q.question_type === 'matching' && q.question_group) {
+                          const group: ListeningQuestion[] = [q];
+                          let j = i + 1;
+                          while (j < qs.length && qs[j].question_type === 'matching' && qs[j].question_group === q.question_group) {
+                            group.push(qs[j]);
+                            j++;
+                          }
+                          grouped.push(group);
+                          i = j;
+                        } else {
+                          grouped.push(q);
+                          i++;
+                        }
+                      }
+                      return grouped.map((item) => {
+                        if (Array.isArray(item)) {
+                          return (
+                            <div key={`group-${item[0].question_group}-${item[0].id}`} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+                              {renderMatchingTable(item)}
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={item.id} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+                            {renderQuestion(item, qs.indexOf(item) + 1)}
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               );
