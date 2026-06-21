@@ -13,9 +13,15 @@ import {
   Settings,
   LogOut,
   History,
+  Sun,
+  Moon,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTheme } from "@/lib/theme";
+import { useVolume } from "@/lib/volume";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -31,7 +37,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
+  const { volume, setVolume } = useVolume();
   const [mounted, setMounted] = useState(false);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const volumePopoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!volumeOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (volumePopoverRef.current && !volumePopoverRef.current.contains(e.target as Node)) {
+        setVolumeOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [volumeOpen]);
 
   useEffect(() => {
     setMounted(true);
@@ -43,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Dark Sidebar */}
       <aside className="w-64 bg-[#0f172a] text-gray-300 flex flex-col flex-shrink-0">
         <div className="h-16 flex items-center px-6 border-b border-gray-800">
@@ -79,6 +100,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="p-4 border-t border-gray-800">
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors mb-1"
+          >
+            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            <span className="font-medium text-sm">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+          </button>
+          <div className="relative" ref={volumePopoverRef}>
+            {volumeOpen && (
+              <div className="absolute bottom-full left-0 mb-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 shadow-lg w-40">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className="w-full h-1 accent-gray-400 cursor-pointer"
+                />
+              </div>
+            )}
+            <button
+              onClick={() => setVolumeOpen((o) => !o)}
+              className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors mb-1"
+            >
+              {volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              <span className="font-medium text-sm">Volume</span>
+            </button>
+          </div>
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
               {user?.full_name ? user.full_name[0].toUpperCase() : "U"}
@@ -103,17 +152,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area - White */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0">
-          <h1 className="text-xl font-semibold text-gray-800 capitalize">
+        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-8 flex-shrink-0">
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100 capitalize">
             {pathname.split("/")[1] || "Dashboard"}
           </h1>
           <div className="flex items-center gap-4">
-            <div className="bg-blue-50 text-primary text-sm font-medium px-3 py-1 rounded-full">
+            <div className="bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-300 text-sm font-medium px-3 py-1 rounded-full">
               {user?.user_type === "premium" ? "Premium Plan" : "Free Plan"}
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-auto bg-gray-50 p-8">
+        <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-8">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>

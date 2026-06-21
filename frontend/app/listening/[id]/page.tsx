@@ -1,8 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { useVolume } from "@/lib/volume";
 import { Clock, Headphones, CheckSquare } from "lucide-react";
 import Link from "next/link";
 
@@ -35,6 +36,12 @@ export default function ListeningTestPage() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(40 * 60);
+  const { volume } = useVolume();
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume / 100;
+  }, [volume]);
 
   useEffect(() => {
     if (id) {
@@ -486,7 +493,7 @@ export default function ListeningTestPage() {
           <div className="flex-1 p-8 overflow-y-auto">
             {test.audio_url ? (
               <div className="p-4 bg-gray-100 rounded-xl border border-gray-200">
-                <audio controls className="w-full">
+                <audio ref={audioRef} controls className="w-full">
                   <source src={test.audio_url} type="audio/mpeg" />
                   Your browser does not support the audio element.
                 </audio>
