@@ -39,10 +39,14 @@ class ReadingAnswerResultSerializer(serializers.ModelSerializer):
 class ReadingAttemptResultSerializer(serializers.ModelSerializer):
     answers = ReadingAnswerResultSerializer(many=True, read_only=True)
     test_title = serializers.CharField(source='test.title', read_only=True)
+    total_questions = serializers.SerializerMethodField()
+
+    def get_total_questions(self, obj):
+        return obj.answers.count()
 
     class Meta:
         model = ReadingAttempt
-        fields = ['id', 'test_id', 'test_title', 'started_at', 'completed_at', 'raw_score', 'band_score', 'answers']
+        fields = ['id', 'test_id', 'test_title', 'started_at', 'completed_at', 'raw_score', 'band_score', 'total_questions', 'answers']
 
 class ReadingAttemptListSerializer(serializers.ModelSerializer):
     cambridge_book = serializers.IntegerField(source='test.cambridge_book', read_only=True)
