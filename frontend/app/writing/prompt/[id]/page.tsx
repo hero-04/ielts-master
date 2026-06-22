@@ -132,7 +132,7 @@ export default function WritingPromptPage() {
             {prompt.prompt_image && (
               <div className="mt-6 overflow-x-auto">
                 <img
-                  src={prompt.prompt_image}
+                  src={prompt.prompt_image?.startsWith('http') ? prompt.prompt_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${prompt.prompt_image}`}
                   alt="Prompt diagram"
                   className="max-w-full rounded-lg border border-gray-200"
                 />
