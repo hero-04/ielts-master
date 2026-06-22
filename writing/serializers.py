@@ -5,7 +5,7 @@ from .models import WritingPrompt, WritingSubmission
 class WritingPromptListSerializer(serializers.ModelSerializer):
     class Meta:
         model = WritingPrompt
-        fields = ['id', 'cambridge_book', 'test_number', 'task_type']
+        fields = ['id', 'cambridge_book', 'test_number', 'task_type', 'prompt_text', 'prompt_image', 'sample_answer']
 
 
 class WritingPromptDetailSerializer(serializers.ModelSerializer):
