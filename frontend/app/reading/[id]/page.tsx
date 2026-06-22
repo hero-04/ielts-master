@@ -216,7 +216,8 @@ export default function ReadingTestPage() {
 
   const renderQuestion = (question: ReadingQuestion, idx: number) => {
     const isTrueFalse = question.question_type === 'tfng' || question.question_type === 'ynng';
-    const isShortAnswer = question.question_type === 'short_answer' || question.question_type === 'sentence_completion';
+    const isShortAnswer = question.question_type === 'short_answer';
+    const isInlineBlank = question.question_type === 'sentence_completion' || question.question_type === 'summary_completion';
 
     if (question.question_type === 'multiple_choice') {
       const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -282,7 +283,32 @@ export default function ReadingTestPage() {
       );
     }
 
-    // Short Answer / Sentence Completion
+    // Sentence / Summary Completion — inline blank
+    if (isInlineBlank) {
+      const parts = question.question_text.split('[BLANK]');
+      return (
+        <div>
+          <p className="font-medium leading-relaxed">
+            <span className="w-7 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm mr-3 align-middle">{idx + 1}</span>
+            {parts.map((part, i) => (
+              <React.Fragment key={i}>
+                <span>{part}</span>
+                {i < parts.length - 1 && (
+                  <input
+                    type="text"
+                    value={answers[question.id] || ""}
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    className="inline-block w-[150px] border-b-2 border-gray-400 focus:border-primary focus:outline-none mx-1 px-1 text-sm bg-transparent align-baseline"
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </p>
+        </div>
+      );
+    }
+
+    // Short Answer
     if (isShortAnswer) {
       return (
         <div>
