@@ -20,6 +20,9 @@ interface ReadingQuestion {
 interface ReadingTest {
   id: number;
   title: string;
+  passage_a_title: string;
+  passage_b_title: string;
+  passage_c_title: string;
   difficulty: string;
   passage_a: string;
   passage_b: string;
@@ -36,7 +39,13 @@ export default function ReadingTestPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`reading_timer_${testId}`);
+      if (saved) return parseInt(saved);
+    }
+    return 60 * 60;
+  });
   const [fontSize, setFontSize] = useState("text-base");
   const [activePassage, setActivePassage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -67,13 +76,16 @@ export default function ReadingTestPage() {
     }
   }, [testId]);
 
-  // Таймер
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft((prev) => {
+        const next = prev > 0 ? prev - 1 : 0;
+        localStorage.setItem(`reading_timer_${testId}`, String(next));
+        return next;
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [testId]);
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -213,6 +225,7 @@ export default function ReadingTestPage() {
       const response = await api.post(`/reading/tests/${test.id}/submit/`, payload);
       alert(`Test submitted! Your band score: ${response.data.band_score}`);
       localStorage.removeItem(`reading_answers_${testId}`);
+      localStorage.removeItem(`reading_timer_${testId}`);
       if (response.data.attempt_id) {
         router.push(`/reading/results/${response.data.attempt_id}`);
       } else {
@@ -484,7 +497,9 @@ export default function ReadingTestPage() {
             </button>
           </div>
           <div className={`p-8 overflow-y-auto ${fontSize} leading-relaxed text-gray-800 text-justify font-serif`} onMouseUp={handleMouseUp}>
-            <h1 className="text-2xl font-bold text-center mb-8">{test.title}</h1>
+            <h1 className="text-2xl font-bold text-center mb-8">
+              {activePassage === 1 ? test.passage_a_title : activePassage === 2 ? test.passage_b_title : test.passage_c_title}
+            </h1>
             {paragraphs.map((paragraph, i) => (
               <p key={i} data-paragraph-index={i} className="mb-6 indent-8">
                 {renderHighlightedParagraph(paragraph, highlights[`${activePassage}-${i}`] ?? [])}
@@ -499,6 +514,16 @@ export default function ReadingTestPage() {
             <h2 className="font-bold text-gray-800">Questions</h2>
           </div>
           <div className="p-8 overflow-y-auto text-base text-gray-800 space-y-8">
+            {passageQuestions.length > 0 && (() => {
+              const qNums = passageQuestions.map(q => q.order_number);
+              const min = Math.min(...qNums);
+              const max = Math.max(...qNums);
+              return (
+                <p className="text-sm text-gray-600 italic border-l-4 border-primary/40 pl-3 py-1 bg-blue-50/50 rounded-r">
+                  You should spend about 20 minutes on <strong>Questions {min}–{max}</strong>, which are based on Reading Passage {activePassage}.
+                </p>
+              );
+            })()}
             {passageQuestions.map((question) => (
               <div
                 key={question.id}

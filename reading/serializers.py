@@ -17,7 +17,7 @@ class ReadingTestDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReadingTest
-        fields = ['id', 'title', 'cambridge_book', 'test_number', 'passage_a', 'passage_b', 'passage_c', 'questions', 'created_at']
+        fields = ['id', 'title', 'cambridge_book', 'test_number', 'passage_a_title', 'passage_a', 'passage_b_title', 'passage_b', 'passage_c_title', 'passage_c', 'questions', 'created_at']
 
 class ReadingAnswerSubmissionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()

@@ -4,6 +4,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 class ReadingTest(models.Model):
     title = models.CharField(max_length=255)
+    passage_a_title = models.CharField(max_length=255, blank=True, default='')
+    passage_b_title = models.CharField(max_length=255, blank=True, default='')
+    passage_c_title = models.CharField(max_length=255, blank=True, default='')
     cambridge_book = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     passage_a = models.TextField(verbose_name='Passage 1')
