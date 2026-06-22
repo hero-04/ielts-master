@@ -9,6 +9,7 @@ import Link from "next/link";
 
 interface AnswerDetail {
   question_id: number;
+  question_order: number;
   question_text: string;
   user_answer: string;
   correct_answer: string;
@@ -117,7 +118,7 @@ export default function ReadingResultPage() {
                   <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                 )}
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900 mb-2">{idx + 1}. {answer.question_text}</p>
+                  <p className="font-medium text-gray-900 mb-2">{answer.question_order}. {answer.question_text}</p>
                   <div className="text-sm space-y-1">
                     <p><span className="text-gray-500">Your answer:</span> <span className={answer.is_correct ? "text-green-600" : "text-red-600"}>{answer.user_answer || "(not answered)"}</span></p>
                     {!answer.is_correct && (
