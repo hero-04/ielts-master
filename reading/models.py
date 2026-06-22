@@ -42,6 +42,7 @@ class ReadingQuestion(models.Model):
     question_text = models.TextField()
     correct_answer = models.CharField(max_length=255, help_text="Can be multiple comma-separated answers if needed")
     explanation = models.TextField(blank=True, null=True)
+    options = models.JSONField(default=list, blank=True)
     order_number = models.PositiveIntegerField()
 
     class Meta:

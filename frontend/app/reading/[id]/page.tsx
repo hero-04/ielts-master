@@ -184,19 +184,6 @@ export default function ReadingTestPage() {
     return out;
   };
 
-  // Парсинг вариантов для Multiple Choice
-  const parseOptions = (questionText: string): string[] => {
-    const match = questionText.match(/[A-D]\)\s*[^A-D]*?(?=[A-D]\)|$)/gs);
-    if (match) {
-      return match.map(opt => opt.trim());
-    }
-    return [];
-  };
-
-  const cleanQuestionText = (questionText: string): string => {
-    return questionText.replace(/[A-D]\)\s*[^A-D]*?(?=[A-D]\)|$)/gs, '').trim();
-  };
-
   const handleSubmit = async () => {
     if (!test) return;
     if (!confirm("Are you sure you want to submit your test?")) return;
@@ -227,25 +214,21 @@ export default function ReadingTestPage() {
   };
 
   const renderQuestion = (question: ReadingQuestion, idx: number) => {
-    const options = parseOptions(question.question_text);
-    const cleanText = cleanQuestionText(question.question_text);
-    const isMultipleChoice = options.length > 0;
     const isTrueFalse = question.question_type === 'tfng' || question.question_type === 'ynng';
     const isShortAnswer = question.question_type === 'short_answer' || question.question_type === 'sentence_completion';
 
-    // Multiple Choice
-    if (isMultipleChoice) {
+    if (question.question_type === 'multiple_choice') {
       const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+      const opts = question.options || [];
       return (
         <div>
           <p className="font-medium mb-4">
             <span className="w-7 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm mr-3">{idx + 1}</span>
-            <span>{cleanText || question.question_text.split(/[A-D]\)/)[0]}</span>
+            <span>{question.question_text}</span>
           </p>
           <div className="pl-10 space-y-3">
-            {options.map((option, optIdx) => {
+            {opts.map((option, optIdx) => {
               const letter = letters[optIdx];
-              const optionText = option.replace(/^[A-D]\)\s*/, '');
               const isSelected = answers[question.id] === letter;
               
               return (
@@ -261,7 +244,7 @@ export default function ReadingTestPage() {
                     className="w-4 h-4 text-primary focus:ring-primary border-gray-300"
                   />
                   <span className="font-bold mr-2">{letter}.</span>
-                  <span>{optionText}</span>
+                  <span>{option}</span>
                 </label>
               );
             })}

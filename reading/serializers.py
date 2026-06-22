@@ -4,7 +4,7 @@ from .models import ReadingTest, ReadingQuestion, ReadingAttempt, ReadingAnswer
 class ReadingQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingQuestion
-        fields = ['id', 'passage', 'question_type', 'question_text', 'order_number']
+        fields = ['id', 'passage', 'question_type', 'question_text', 'order_number', 'options']
         # Note: We omit correct_answer and explanation here so users don't cheat
 
 class ReadingTestListSerializer(serializers.ModelSerializer):

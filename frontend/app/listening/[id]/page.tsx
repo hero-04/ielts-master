@@ -102,18 +102,6 @@ export default function ListeningTestPage() {
     }
   };
 
-  const parseOptions = (questionText: string): string[] => {
-    const match = questionText.match(/[A-D]\)\s*[^A-D]*?(?=[A-D]\)|$)/gs);
-    if (match) {
-      return match.map(opt => opt.trim());
-    }
-    return [];
-  };
-
-  const cleanQuestionText = (questionText: string): string => {
-    return questionText.replace(/[A-D]\)\s*[^A-D]*?(?=[A-D]\)|$)/gs, '').trim();
-  };
-
   const renderQuestion = (question: ListeningQuestion, idx: number) => {
     // Drag & Drop — inline drop zone + word bank
     if (question.question_type === 'drag_drop') {
@@ -221,26 +209,22 @@ export default function ListeningTestPage() {
       );
     }
 
-    const options = parseOptions(question.question_text);
-    const cleanText = cleanQuestionText(question.question_text);
-    const isMultipleChoice = options.length > 0;
     const isTrueFalse = question.question_type === 'tfng' || question.question_type === 'ynng';
     const isFormCompletion = question.question_type === 'form_completion' || question.question_type === 'table_completion' || question.question_type === 'short_answer';
 
-    if (isMultipleChoice) {
+    if (question.question_type === 'multiple_choice') {
       const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-      const questionText = cleanText || question.question_text.split(/[A-D]\)/)[0];
+      const opts = question.options || [];
 
       return (
         <div>
           <p className="font-medium text-gray-900 mb-3">
-            {idx + 1}. {questionText}
+            {idx + 1}. {question.question_text}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-            {options.map((option, optIdx) => {
+            {opts.map((option, optIdx) => {
               const letter = letters[optIdx];
               const isSelected = answers[question.id] === letter;
-              const optionText = option.replace(/^[A-D]\)\s*/, '');
 
               return (
                 <button
@@ -254,7 +238,7 @@ export default function ListeningTestPage() {
                   style={{ opacity: 1, transition: "none" }}
                 >
                   <span className="font-bold mr-2 text-inherit">{letter}.</span>
-                  <span className="text-inherit">{optionText}</span>
+                  <span className="text-inherit">{option}</span>
                 </button>
               );
             })}

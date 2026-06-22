@@ -18,6 +18,7 @@ class ReadingQuestionAdmin(admin.ModelAdmin):
     list_filter = ('test', 'passage', 'question_type')
     search_fields = ('question_text',)
     ordering = ('test', 'order_number')
+    fields = ('test', 'passage', 'question_type', 'question_text', 'correct_answer', 'explanation', 'order_number', 'options')
 
 class ReadingAnswerInline(admin.TabularInline):
     model = ReadingAnswer
