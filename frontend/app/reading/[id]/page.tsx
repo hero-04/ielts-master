@@ -1,3 +1,4 @@
+import React from "react";
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -173,7 +174,7 @@ export default function ReadingTestPage() {
   const renderHighlightedParagraph = (text: string, ranges: { start: number; end: number }[]) => {
     if (!ranges.length) return text;
     const sorted = [...ranges].sort((a, b) => a.start - b.start);
-    const out: (string | JSX.Element)[] = [];
+    const out: (string | React.ReactElement)[] = [];
     let cursor = 0;
     for (const r of sorted) {
       if (r.start > cursor) out.push(text.slice(cursor, r.start));
