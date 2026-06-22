@@ -10,3 +10,5 @@ python-decouple==3.8
 whitenoise==6.9.0
 dj-database-url==2.3.0
 python-dotenv==1.0.1
+cloudinary
+django-cloudinary-storage
