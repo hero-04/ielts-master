@@ -4,15 +4,50 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Book, Headphones, PenTool, Mic, ArrowRight, BarChart2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
+interface Attempt {
+  band_score: string;
+}
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
 
+  const [readingAttempts, setReadingAttempts] = useState<Attempt[]>([]);
+  const [listeningAttempts, setListeningAttempts] = useState<Attempt[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      api.get("/reading/attempts/"),
+      api.get("/listening/attempts/"),
+    ]).then(([r, l]) => {
+      setReadingAttempts(r.data.results ?? r.data);
+      setListeningAttempts(l.data.results ?? l.data);
+    }).finally(() => setLoadingStats(false));
+  }, []);
+
+  const avg = (attempts: Attempt[]) =>
+    attempts.length === 0
+      ? "-"
+      : (attempts.reduce((s, a) => s + parseFloat(a.band_score), 0) / attempts.length).toFixed(1);
+
+  const quotes = [
+    { text: "Whatever the mind can conceive and believe, it can achieve.", author: "Napoleon Hill" },
+    { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+    { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+    { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  ];
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+
   const stats = [
-    { name: "Reading Tests Completed", value: "12", icon: Book, color: "text-blue-500", bg: "bg-blue-50" },
-    { name: "Average Reading Score", value: "7.5", icon: BarChart2, color: "text-green-500", bg: "bg-green-50" },
-    { name: "Listening Tests Completed", value: "8", icon: Headphones, color: "text-purple-500", bg: "bg-purple-50" },
-    { name: "Average Listening Score", value: "8.0", icon: BarChart2, color: "text-amber-500", bg: "bg-amber-50" },
+    { name: "Reading Tests Completed", value: loadingStats ? null : String(readingAttempts.length), icon: Book, color: "text-blue-500", bg: "bg-blue-50" },
+    { name: "Average Reading Score", value: loadingStats ? null : avg(readingAttempts), icon: BarChart2, color: "text-green-500", bg: "bg-green-50" },
+    { name: "Listening Tests Completed", value: loadingStats ? null : String(listeningAttempts.length), icon: Headphones, color: "text-purple-500", bg: "bg-purple-50" },
+    { name: "Average Listening Score", value: loadingStats ? null : avg(listeningAttempts), icon: BarChart2, color: "text-amber-500", bg: "bg-amber-50" },
   ];
 
   return (
@@ -31,10 +66,17 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+              {stat.value === null
+                ? <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1" />
+                : <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>}
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mb-12 p-6 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40">
+        <p className="italic text-gray-700 dark:text-gray-300 text-lg leading-relaxed mb-3">&ldquo;{quote.text}&rdquo;</p>
+        <p className="text-sm font-semibold text-primary">— {quote.author}</p>
       </div>
 
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Quick Start</h3>
@@ -74,10 +116,10 @@ export default function DashboardPage() {
             <div className="w-14 h-14 bg-amber-500 text-white rounded-xl flex items-center justify-center mb-6 shadow-md">
               <PenTool className="w-7 h-7" />
             </div>
-            <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Writing with AI</h4>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Get instant feedback on TR, CC, LR, and GRA with our advanced AI grading.</p>
+            <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Writing Practice</h4>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Timed Task 1 and Task 2 practice with word count tracking and Band 8+ sample answers.</p>
             <Link href="/writing" className="inline-flex items-center gap-2 text-amber-600 font-semibold hover:text-amber-800 transition-colors">
-              Write an essay <ArrowRight className="w-5 h-5" />
+              Start writing <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>
@@ -88,8 +130,8 @@ export default function DashboardPage() {
             <div className="w-14 h-14 bg-green-500 text-white rounded-xl flex items-center justify-center mb-6 shadow-md">
               <Mic className="w-7 h-7" />
             </div>
-            <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Speaking Simulation</h4>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Practice all 3 parts of the speaking test with immediate pronunciation feedback.</p>
+            <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Speaking Practice</h4>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Practise all three parts of the speaking test with structured question prompts.</p>
             <Link href="/speaking" className="inline-flex items-center gap-2 text-green-600 font-semibold hover:text-green-800 transition-colors">
               Start speaking <ArrowRight className="w-5 h-5" />
             </Link>
