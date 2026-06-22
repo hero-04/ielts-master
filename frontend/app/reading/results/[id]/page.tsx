@@ -73,8 +73,6 @@ export default function ReadingResultPage() {
     );
   }
 
-  const percentage = result.total_questions > 0 ? (result.raw_score / result.total_questions) * 100 : 0;
-
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-sm">
@@ -100,7 +98,9 @@ export default function ReadingResultPage() {
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-xl">
               <p className="text-sm text-gray-600 mb-1">Accuracy</p>
-              <p className="text-3xl font-bold text-blue-600">{Math.round(percentage)}%</p>
+              <p className="text-3xl font-bold text-blue-600">
+                {result.total_questions === 0 ? "-" : `${Math.round((result.raw_score / result.total_questions) * 100)}%`}
+              </p>
             </div>
           </div>
         </div>

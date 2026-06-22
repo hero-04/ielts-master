@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from .models import ReadingTest, ReadingQuestion, ReadingAttempt, ReadingAnswer
 
@@ -18,7 +19,17 @@ class ReadingQuestionAdmin(admin.ModelAdmin):
     list_filter = ('test', 'passage', 'question_type')
     search_fields = ('question_text',)
     ordering = ('test', 'order_number')
-    fields = ('test', 'passage', 'question_type', 'question_text', 'correct_answer', 'explanation', 'order_number', 'options')
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'explanation':
+            kwargs['widget'] = forms.Textarea(attrs={'rows': 3})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    def get_fields(self, request, obj=None):
+        fields = ['test', 'passage', 'question_type', 'question_text', 'correct_answer', 'explanation', 'order_number']
+        if obj is None or obj.question_type == 'multiple_choice':
+            fields.append('options')
+        return fields
 
 class ReadingAnswerInline(admin.TabularInline):
     model = ReadingAnswer

@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from .models import ListeningTest, ListeningQuestion, ListeningAttempt, ListeningAnswer
 
@@ -18,8 +19,12 @@ class ListeningQuestionAdmin(admin.ModelAdmin):
     list_filter = ('test', 'section', 'question_type')
     search_fields = ('question_text',)
     ordering = ('test', 'order_number')
-    fields = ('test', 'section', 'question_type', 'question_text', 'correct_answer',
-              'order_number', 'options', 'question_group')
+
+    def get_fields(self, request, obj=None):
+        fields = ['test', 'section', 'question_type', 'question_text', 'correct_answer', 'order_number', 'question_group']
+        if obj is None or obj.question_type in ('multiple_choice', 'drag_drop', 'selection_grid', 'matching'):
+            fields.append('options')
+        return fields
 
 class ListeningAnswerInline(admin.TabularInline):
     model = ListeningAnswer
