@@ -61,6 +61,17 @@ export default function ListeningTestPage() {
   }, [id]);
 
   useEffect(() => {
+    if (!id) return;
+    const saved = localStorage.getItem(`listening_answers_${id}`);
+    if (saved) { try { setAnswers(JSON.parse(saved)); } catch {} }
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    localStorage.setItem(`listening_answers_${id}`, JSON.stringify(answers));
+  }, [answers, id]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -91,6 +102,7 @@ export default function ListeningTestPage() {
     try {
       const response = await api.post(`/listening/tests/${test.id}/submit/`, payload);
       alert(`Test submitted! Your band score: ${response.data.band_score}`);
+      localStorage.removeItem(`listening_answers_${id}`);
       if (response.data.attempt_id) {
         window.location.href = `/listening/results/${response.data.attempt_id}`;
       }

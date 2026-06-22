@@ -42,7 +42,7 @@ class ReadingAttemptResultSerializer(serializers.ModelSerializer):
     total_questions = serializers.SerializerMethodField()
 
     def get_total_questions(self, obj):
-        return obj.answers.count()
+        return obj.test.questions.count()
 
     class Meta:
         model = ReadingAttempt

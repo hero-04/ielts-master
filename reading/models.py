@@ -28,6 +28,7 @@ class ReadingQuestion(models.Model):
 
     class QuestionType(models.TextChoices):
         MULTIPLE_CHOICE = 'multiple_choice', 'Multiple Choice'
+        MULTIPLE_CHOICE_MULTIPLE = 'multiple_choice_multiple', 'Multiple Choice (Multiple Answers)'
         MATCHING_HEADINGS = 'matching_headings', 'Matching Headings'
         MATCHING_INFORMATION = 'matching_information', 'Matching Information'
         TFNG = 'tfng', 'True / False / Not Given'

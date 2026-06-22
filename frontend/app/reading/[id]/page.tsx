@@ -86,6 +86,17 @@ export default function ReadingTestPage() {
   }, []);
 
   useEffect(() => {
+    if (!testId) return;
+    const saved = localStorage.getItem(`reading_answers_${testId}`);
+    if (saved) { try { setAnswers(JSON.parse(saved)); } catch {} }
+  }, [testId]);
+
+  useEffect(() => {
+    if (!testId) return;
+    localStorage.setItem(`reading_answers_${testId}`, JSON.stringify(answers));
+  }, [answers, testId]);
+
+  useEffect(() => {
     if (focusedOrderNumber === null || !test) return;
     const letter = ({ 1: 'A', 2: 'B', 3: 'C' } as Record<number, string>)[activePassage];
     const q = test.questions.filter(q => q.passage === letter)
@@ -201,6 +212,7 @@ export default function ReadingTestPage() {
     try {
       const response = await api.post(`/reading/tests/${test.id}/submit/`, payload);
       alert(`Test submitted! Your band score: ${response.data.band_score}`);
+      localStorage.removeItem(`reading_answers_${testId}`);
       if (response.data.attempt_id) {
         router.push(`/reading/results/${response.data.attempt_id}`);
       } else {
