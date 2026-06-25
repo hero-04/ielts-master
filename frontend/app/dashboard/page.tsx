@@ -34,12 +34,14 @@ export default function DashboardPage() {
       : (attempts.reduce((s, a) => s + parseFloat(a.band_score), 0) / attempts.length).toFixed(1);
 
   const quotes = [
-    { text: "Whatever the mind can conceive and believe, it can achieve.", author: "Napoleon Hill" },
-    { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-    { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
-    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: "Dr. Seuss" },
+    { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+    { text: "The more you learn, the more you earn.", author: "Warren Buffett" },
+    { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
     { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
-    { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+    { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+    { text: "Once you learn to read, you will be forever free.", author: "Frederick Douglass" },
+    { text: "The beautiful thing about learning is that nobody can take it away from you.", author: "B.B. King" },
   ];
   const quote = quotes[Math.floor(Math.random() * quotes.length)];
 
@@ -74,9 +76,9 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mb-12 p-6 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40">
-        <p className="italic text-gray-700 dark:text-gray-300 text-lg leading-relaxed mb-3">&ldquo;{quote.text}&rdquo;</p>
-        <p className="text-sm font-semibold text-primary">— {quote.author}</p>
+      <div className="mb-12 p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-900/40">
+        <p className="italic text-gray-800 dark:text-gray-200 text-2xl font-semibold leading-relaxed mb-4">&ldquo;{quote.text}&rdquo;</p>
+        <p className="text-base font-bold text-primary">— {quote.author}</p>
       </div>
 
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Quick Start</h3>
