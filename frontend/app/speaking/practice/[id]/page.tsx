@@ -250,13 +250,13 @@ export default function SpeakingPracticePage() {
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">Great practice session!</h2>
           <p className="text-gray-500 mb-8 max-w-sm">
-            You've completed all three parts — Cambridge {test.cambridge_book}, Test {test.test_number}.
+            You've completed all three parts. Keep practising to improve your fluency and confidence!
           </p>
           <Link
-            href={`/speaking/book/${test.cambridge_book}`}
+            href="/speaking"
             className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
           >
-            Back to Cambridge {test.cambridge_book}
+            Back to Speaking
           </Link>
         </div>
       )}
