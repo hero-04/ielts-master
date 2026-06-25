@@ -38,7 +38,7 @@ export default function ReadingTestPage() {
   const [test, setTest] = useState<ReadingTest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeLeft, setTimeLeft] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`reading_timer_${testId}`);
@@ -124,8 +124,8 @@ export default function ReadingTestPage() {
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const handleAnswerChange = (qId: number, val: string) => {
-    setAnswers({ ...answers, [qId]: val });
+  const handleAnswerChange = (key: string | number, val: string) => {
+    setAnswers(prev => ({ ...prev, [String(key)]: val }));
   };
 
   const handleMouseUp = () => {
@@ -215,10 +215,14 @@ export default function ReadingTestPage() {
     setSubmitting(true);
 
     const payload = {
-      answers: Object.entries(answers).map(([questionId, userAnswer]) => ({
-        question_id: parseInt(questionId),
-        user_answer: userAnswer,
-      })),
+      answers: Object.entries(answers).flatMap(([key, userAnswer]) => {
+        if (key.includes('_')) {
+          const blankNum = parseInt(key.split('_')[1]);
+          const q = test.questions.find(q => q.order_number === blankNum);
+          return q ? [{ question_id: q.id, user_answer: userAnswer }] : [];
+        }
+        return [{ question_id: parseInt(key), user_answer: userAnswer }];
+      }),
     };
 
     try {
@@ -256,7 +260,7 @@ export default function ReadingTestPage() {
           <div className="pl-10 space-y-3">
             {opts.map((option, optIdx) => {
               const letter = letters[optIdx];
-              const isSelected = answers[question.id] === letter;
+              const isSelected = answers[`${question.id}`] === letter;
               
               return (
                 <label key={optIdx} className={`flex items-center gap-3 cursor-pointer p-2 rounded-lg border transition-all ${
@@ -296,7 +300,7 @@ export default function ReadingTestPage() {
                   type="radio"
                   name={`q-${question.id}`}
                   value={opt}
-                  checked={answers[question.id] === opt}
+                  checked={answers[`${question.id}`] === opt}
                   onChange={() => handleAnswerChange(question.id, opt)}
                   className="w-4 h-4 text-primary focus:ring-primary"
                 />
@@ -321,7 +325,7 @@ export default function ReadingTestPage() {
                 {i < parts.length - 1 && (
                   <input
                     type="text"
-                    value={answers[question.id] || ""}
+                    value={answers[`${question.id}`] || ""}
                     onChange={(e) => handleAnswerChange(question.id, e.target.value)}
                     className="inline-block w-[150px] border-b-2 border-gray-400 focus:border-primary focus:outline-none mx-1 px-1 text-sm bg-transparent align-baseline"
                   />
@@ -344,7 +348,55 @@ export default function ReadingTestPage() {
           <div className="pl-10">
             <input
               type="text"
-              value={answers[question.id] || ""}
+              value={answers[`${question.id}`] || ""}
+              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+              className="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+              placeholder="Type your answer..."
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Form / Table completion — multi-blank block
+    if (question.question_type === 'form_completion' || question.question_type === 'table_completion') {
+      if (/\d+\s*\.{4,}/.test(question.question_text)) {
+        const text = question.question_text;
+        const re = /(\d+)\s*\.{4,}/g;
+        const parts: React.ReactNode[] = [];
+        let lastIdx = 0;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(text)) !== null) {
+          const blankNum = parseInt(m[1]);
+          if (m.index > lastIdx) parts.push(<span key={`t${lastIdx}`}>{text.slice(lastIdx, m.index)}</span>);
+          const ansKey = `${question.id}_${blankNum}`;
+          parts.push(
+            <React.Fragment key={`b${blankNum}`}>
+              <span className="font-bold text-gray-700">{blankNum}</span>
+              <input
+                type="text"
+                className="inline-block border-b-2 border-gray-400 focus:border-primary outline-none px-1 mx-1 w-28 text-primary font-medium bg-transparent"
+                value={answers[ansKey] || ''}
+                onChange={(e) => handleAnswerChange(ansKey, e.target.value)}
+                placeholder="..."
+              />
+            </React.Fragment>
+          );
+          lastIdx = m.index + m[0].length;
+        }
+        if (lastIdx < text.length) parts.push(<span key="tend">{text.slice(lastIdx)}</span>);
+        return <div className="leading-loose text-sm whitespace-pre-wrap">{parts}</div>;
+      }
+      return (
+        <div>
+          <p className="font-medium mb-4">
+            <span className="w-7 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm mr-3">{idx + 1}</span>
+            <span>{question.question_text}</span>
+          </p>
+          <div className="pl-10">
+            <input
+              type="text"
+              value={answers[`${question.id}`] || ""}
               onChange={(e) => handleAnswerChange(question.id, e.target.value)}
               className="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
               placeholder="Type your answer..."
@@ -364,7 +416,7 @@ export default function ReadingTestPage() {
         <div className="pl-10">
           <input
             type="text"
-            value={answers[question.id] || ""}
+            value={answers[`${question.id}`] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
             className="w-full max-w-sm px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
             placeholder="Type your answer..."

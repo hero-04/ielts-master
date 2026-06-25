@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useVolume } from "@/lib/volume";
 import { Clock, Headphones, CheckSquare } from "lucide-react";
@@ -33,7 +33,7 @@ export default function ListeningTestPage() {
   const [test, setTest] = useState<ListeningTest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(40 * 60);
   const { volume } = useVolume();
@@ -84,8 +84,8 @@ export default function ListeningTestPage() {
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const handleAnswerChange = (questionId: number, value: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  const handleAnswerChange = (key: string | number, value: string) => {
+    setAnswers((prev) => ({ ...prev, [String(key)]: value }));
   };
 
   const handleSubmit = async () => {
@@ -93,10 +93,14 @@ export default function ListeningTestPage() {
     setSubmitting(true);
 
     const payload = {
-      answers: Object.entries(answers).map(([questionId, userAnswer]) => ({
-        question_id: parseInt(questionId),
-        user_answer: userAnswer,
-      })),
+      answers: Object.entries(answers).flatMap(([key, userAnswer]) => {
+        if (key.includes('_')) {
+          const blankNum = parseInt(key.split('_')[1]);
+          const q = test.questions.find(q => q.order_number === blankNum);
+          return q ? [{ question_id: q.id, user_answer: userAnswer }] : [];
+        }
+        return [{ question_id: parseInt(key), user_answer: userAnswer }];
+      }),
     };
 
     try {
@@ -117,7 +121,7 @@ export default function ListeningTestPage() {
   const renderQuestion = (question: ListeningQuestion, idx: number) => {
     // Drag & Drop — inline drop zone + word bank
     if (question.question_type === 'drag_drop') {
-      const currentAnswer = answers[question.id] || '';
+      const currentAnswer = answers[`${question.id}`] || '';
       const wordBank = question.options || [];
       const BLANK_RE = /_{3,}|\[BLANK\]/;
       const parts = question.question_text.split(BLANK_RE);
@@ -200,7 +204,7 @@ export default function ListeningTestPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
             {wordBank.map((option, optIdx) => {
               const letter = letters[optIdx];
-              const isSelected = answers[question.id] === letter;
+              const isSelected = answers[`${question.id}`] === letter;
               return (
                 <button
                   key={optIdx}
@@ -236,7 +240,7 @@ export default function ListeningTestPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
             {opts.map((option, optIdx) => {
               const letter = letters[optIdx];
-              const isSelected = answers[question.id] === letter;
+              const isSelected = answers[`${question.id}`] === letter;
 
               return (
                 <button
@@ -276,7 +280,7 @@ export default function ListeningTestPage() {
                 key={opt.value}
                 onClick={() => handleAnswerChange(question.id, opt.value)}
                 className={`px-4 py-2 rounded-lg border transition-all ${
-                  answers[question.id] === opt.value
+                  answers[`${question.id}`] === opt.value
                     ? "border-purple-600 bg-purple-50 text-purple-700"
                     : "border-gray-200 hover:border-gray-300 bg-white text-gray-600"
                 }`}
@@ -290,6 +294,33 @@ export default function ListeningTestPage() {
     }
 
     if (isFormCompletion) {
+      if ((question.question_type === 'form_completion' || question.question_type === 'table_completion') && /\d+\s*\.{4,}/.test(question.question_text)) {
+        const text = question.question_text;
+        const re = /(\d+)\s*\.{4,}/g;
+        const parts: JSX.Element[] = [];
+        let lastIdx = 0;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(text)) !== null) {
+          const blankNum = parseInt(m[1]);
+          if (m.index > lastIdx) parts.push(<span key={`t${lastIdx}`}>{text.slice(lastIdx, m.index)}</span>);
+          const ansKey = `${question.id}_${blankNum}`;
+          parts.push(
+            <Fragment key={`b${blankNum}`}>
+              <span className="font-bold text-gray-700">{blankNum}</span>
+              <input
+                type="text"
+                className="inline-block border-b-2 border-gray-400 focus:border-purple-500 outline-none px-1 mx-1 w-28 text-purple-700 font-medium bg-transparent"
+                value={answers[ansKey] || ''}
+                onChange={(e) => handleAnswerChange(ansKey, e.target.value)}
+                placeholder="..."
+              />
+            </Fragment>
+          );
+          lastIdx = m.index + m[0].length;
+        }
+        if (lastIdx < text.length) parts.push(<span key="tend">{text.slice(lastIdx)}</span>);
+        return <div className="leading-loose text-gray-900 text-sm whitespace-pre-wrap">{parts}</div>;
+      }
       return (
         <div>
           <p className="font-medium text-gray-900 mb-3">
@@ -299,7 +330,7 @@ export default function ListeningTestPage() {
             type="text"
             placeholder="Type your answer here..."
             className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            value={answers[question.id] || ""}
+            value={answers[`${question.id}`] || ""}
             onChange={(e) => handleAnswerChange(question.id, e.target.value)}
           />
         </div>
@@ -315,7 +346,7 @@ export default function ListeningTestPage() {
           type="text"
           placeholder="Type your answer here..."
           className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          value={answers[question.id] || ""}
+          value={answers[`${question.id}`] || ""}
           onChange={(e) => handleAnswerChange(question.id, e.target.value)}
         />
       </div>
@@ -349,7 +380,7 @@ export default function ListeningTestPage() {
             </thead>
             <tbody>
               {matchingQuestions.map((question) => {
-                const selected = answers[question.id];
+                const selected = answers[`${question.id}`];
                 return (
                   <tr key={question.id} className="hover:bg-gray-50">
                     <td className="py-3 px-3 text-gray-900 border border-gray-200">
