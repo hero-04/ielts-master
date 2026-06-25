@@ -84,10 +84,15 @@ export default function ReadingBookPage() {
             if (exists) {
               return (
                 <div key={testNum} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col">
-                  <div className="p-6 flex-1">
-                    <h3 className="text-lg font-bold text-gray-900">Test {testNum}</h3>
+                  <div className="p-5 flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">Test {testNum}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs bg-blue-50 text-blue-600 font-medium px-2 py-1 rounded-full">60 min</span>
+                      <span className="text-xs bg-blue-50 text-blue-600 font-medium px-2 py-1 rounded-full">3 Passages</span>
+                      <span className="text-xs bg-blue-50 text-blue-600 font-medium px-2 py-1 rounded-full">40 Questions</span>
+                    </div>
                   </div>
-                  <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
+                  <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl">
                     <Link
                       href={`/reading/${test!.id}`}
                       className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors"
