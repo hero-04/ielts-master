@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
-import { ArrowLeft, PlayCircle, Lock, BookOpen, X } from "lucide-react";
+import { ArrowLeft, PlayCircle, Lock, BookOpen, X, Clock } from "lucide-react";
 
 interface WritingPrompt {
   id: number;
@@ -87,7 +87,14 @@ export default function WritingTask1BookPage() {
               return (
                 <div key={testNum} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col">
                   <div className="p-6 flex-1">
-                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Test {testNum}</p>
+                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-3">Test {testNum}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="flex items-center gap-1 bg-amber-50 text-amber-700 rounded-full px-2 py-0.5 text-xs font-medium">
+                        <Clock className="w-3 h-3" /> 20 min
+                      </span>
+                      <span className="bg-amber-50 text-amber-700 rounded-full px-2 py-0.5 text-xs font-medium">150+ words</span>
+                      <span className="bg-gray-100 text-gray-500 rounded-full px-2 py-0.5 text-xs font-medium">Academic Writing</span>
+                    </div>
                   </div>
                   <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl flex flex-col gap-2">
                     <Link
