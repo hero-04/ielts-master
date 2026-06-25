@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -27,10 +27,17 @@ type Part2Phase = 'idle' | 'prep' | 'speak';
 
 export default function SpeakingPracticePage() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
   const [test, setTest] = useState<SpeakingTest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentStep, setCurrentStep] = useState<Step>('part1');
+  const initialStep: Step = (() => {
+    const p = searchParams?.get('startPart');
+    if (p === '2') return 'part2';
+    if (p === '3') return 'part3';
+    return 'part1';
+  })();
+  const [currentStep, setCurrentStep] = useState<Step>(initialStep);
   const [shownAnswers, setShownAnswers] = useState<Record<number, boolean>>({});
   const [part2Phase, setPart2Phase] = useState<Part2Phase>('idle');
   const [timeLeft, setTimeLeft] = useState(0);
