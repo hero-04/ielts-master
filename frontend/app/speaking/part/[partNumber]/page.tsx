@@ -137,7 +137,7 @@ export default function SpeakingPartPage() {
       {/* Test selection */}
       <div className="mb-5">
         <h3 className="text-xl font-bold text-gray-900">Choose a Question Set</h3>
-        <p className="text-gray-500 text-sm mt-1">Each set is drawn from a real Cambridge IELTS exam.</p>
+        <p className="text-gray-500 text-sm mt-1">Each set contains real IELTS exam questions.</p>
       </div>
 
       {error ? (
@@ -160,7 +160,7 @@ export default function SpeakingPartPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tests.map((test) => (
+          {tests.map((test, index) => (
             <div
               key={test.id}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col"
@@ -168,12 +168,11 @@ export default function SpeakingPartPage() {
               <div className="p-6 flex-1">
                 <div className="flex items-center justify-between mb-4">
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${meta.badgeBg} ${meta.badgeText}`}>
-                    Cambridge {test.cambridge_book}
+                    Question Set {index + 1}
                   </span>
-                  <span className="text-xs text-gray-400 font-medium">Test {test.test_number}</span>
                 </div>
                 <h4 className="text-lg font-bold text-gray-900 mb-1">
-                  Cambridge {test.cambridge_book} · Test {test.test_number}
+                  Set {index + 1}
                 </h4>
                 <p className="text-sm text-gray-500">{meta.title} — {meta.subtitle}</p>
                 <div className="flex gap-2 mt-4">
