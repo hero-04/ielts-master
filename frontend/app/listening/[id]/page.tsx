@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useVolume } from "@/lib/volume";
 import { Clock, Headphones, CheckSquare } from "lucide-react";
@@ -297,7 +297,7 @@ export default function ListeningTestPage() {
       if ((question.question_type === 'form_completion' || question.question_type === 'table_completion') && /\d+\s*\.{4,}/.test(question.question_text)) {
         const text = question.question_text;
         const re = /(\d+)\s*\.{4,}/g;
-        const parts: JSX.Element[] = [];
+        const parts: ReactNode[] = [];
         let lastIdx = 0;
         let m: RegExpExecArray | null;
         while ((m = re.exec(text)) !== null) {
