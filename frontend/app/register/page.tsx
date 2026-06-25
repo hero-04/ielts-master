@@ -36,7 +36,16 @@ export default function RegisterPage() {
       // After successful registration, redirect to login
       router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.response?.data?.email?.[0] || "Failed to create account. Please try again.");
+      const data = err.response?.data;
+      const message =
+        data?.detail ||
+        data?.email?.[0] ||
+        data?.password?.[0] ||
+        data?.password_confirm?.[0] ||
+        data?.full_name?.[0] ||
+        (data && typeof data === 'object' ? (Object.values(data).flat()[0] as string) : null) ||
+        "Failed to create account. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }
