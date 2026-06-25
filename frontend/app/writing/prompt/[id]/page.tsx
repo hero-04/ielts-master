@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Clock, CheckSquare } from "lucide-react";
+import { Clock, CheckSquare, Settings } from "lucide-react";
 import Link from "next/link";
 
 interface WritingPrompt {
@@ -24,6 +24,7 @@ export default function WritingPromptPage() {
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [fontSize, setFontSize] = useState("text-base");
 
   useEffect(() => {
     if (!id) return;
@@ -31,7 +32,8 @@ export default function WritingPromptPage() {
       try {
         const res = await api.get(`/writing/prompts/${id}/`);
         setPrompt(res.data);
-        setTimeLeft(res.data.task_type === "task_1" ? 20 * 60 : 40 * 60);
+        const saved = localStorage.getItem(`writing_timer_${id}`);
+        setTimeLeft(saved ? parseInt(saved) : (res.data.task_type === "task_1" ? 20 * 60 : 40 * 60));
       } catch {
         setError("Could not load the prompt. Please try again later.");
       } finally {
@@ -44,7 +46,11 @@ export default function WritingPromptPage() {
   useEffect(() => {
     if (timeLeft <= 0) return;
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft((prev) => {
+        const next = prev > 0 ? prev - 1 : 0;
+        localStorage.setItem(`writing_timer_${id}`, String(next));
+        return next;
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft > 0]);
@@ -65,6 +71,7 @@ export default function WritingPromptPage() {
         prompt: prompt.id,
         submission_text: text,
       });
+      localStorage.removeItem(`writing_timer_${id}`);
       window.location.href = "/writing/my-writings";
     } catch {
       alert("Error submitting. Please try again.");
@@ -113,9 +120,21 @@ export default function WritingPromptPage() {
             Cambridge {prompt.cambridge_book} • Test {prompt.test_number} • {taskLabel}
           </div>
         </div>
-        <div className={`flex items-center gap-2 font-mono text-xl font-bold bg-black/20 px-4 py-1.5 rounded ${timeLeft < 300 ? "text-red-400 animate-pulse" : "text-white"}`}>
-          <Clock className="w-5 h-5" />
-          {formatTime(timeLeft)}
+        <div className="flex items-center gap-4">
+          <button
+            className="flex items-center gap-1 hover:text-blue-200 transition-colors text-sm"
+            onClick={() => {
+              if (fontSize === "text-base") setFontSize("text-lg");
+              else if (fontSize === "text-lg") setFontSize("text-xl");
+              else setFontSize("text-base");
+            }}
+          >
+            <Settings className="w-4 h-4" /> Text Size
+          </button>
+          <div className={`flex items-center gap-2 font-mono text-xl font-bold bg-black/20 px-4 py-1.5 rounded ${timeLeft < 300 ? "text-red-400 animate-pulse" : "text-white"}`}>
+            <Clock className="w-5 h-5" />
+            {formatTime(timeLeft)}
+          </div>
         </div>
       </header>
 
@@ -128,7 +147,7 @@ export default function WritingPromptPage() {
             <h2 className="font-bold text-gray-800">Prompt</h2>
           </div>
           <div className="flex-1 p-8 overflow-y-auto">
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{prompt.prompt_text}</p>
+            <p className={`text-gray-800 leading-relaxed whitespace-pre-wrap ${fontSize}`}>{prompt.prompt_text}</p>
             {prompt.prompt_image && (
               <img src={prompt.prompt_image} alt="Writing prompt" className="w-full rounded-xl mb-6" />
             )}
@@ -145,7 +164,7 @@ export default function WritingPromptPage() {
           </div>
           <div className="flex-1 p-4 overflow-hidden flex flex-col">
             <textarea
-              className="flex-1 w-full resize-none p-4 text-gray-900 text-base leading-relaxed border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+              className={`flex-1 w-full resize-none p-4 text-gray-900 ${fontSize} leading-relaxed border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent`}
               placeholder="Write your answer here..."
               value={text}
               onChange={(e) => setText(e.target.value)}
