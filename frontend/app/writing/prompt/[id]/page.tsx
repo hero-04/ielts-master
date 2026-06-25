@@ -147,10 +147,26 @@ export default function WritingPromptPage() {
             <h2 className="font-bold text-gray-800">Prompt</h2>
           </div>
           <div className="flex-1 p-8 overflow-y-auto">
-            <p className={`text-gray-800 leading-relaxed whitespace-pre-wrap ${fontSize}`}>{prompt.prompt_text}</p>
-            {prompt.prompt_image && (
-              <img src={prompt.prompt_image} alt="Writing prompt" className="w-full rounded-xl mb-6" />
+            <p className="text-blue-700 font-bold text-lg mb-3">
+              {prompt.task_type === 'task_1' ? 'WRITING TASK 1' : 'WRITING TASK 2'}
+            </p>
+            <p className="text-gray-700 mb-3">
+              You should spend about {prompt.task_type === 'task_1' ? '20' : '40'} minutes on this task.
+            </p>
+            {prompt.task_type === 'task_2' && (
+              <p className="text-gray-700 mb-3">Write about the following topic:</p>
             )}
+            {prompt.task_type === 'task_1' && prompt.prompt_image && (
+              <img src={prompt.prompt_image} alt="Writing prompt" className="w-full rounded-xl mb-4" />
+            )}
+            <div className="border border-blue-300 bg-blue-50 rounded-lg p-4 mb-4">
+              <p className={`text-gray-800 leading-relaxed whitespace-pre-wrap font-semibold italic ${fontSize}`}>
+                {prompt.prompt_text}
+              </p>
+            </div>
+            <p className="text-gray-700">
+              Write at least {prompt.task_type === 'task_1' ? '150' : '250'} words.
+            </p>
           </div>
         </div>
 
