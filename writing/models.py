@@ -12,7 +12,7 @@ class WritingPrompt(models.Model):
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     task_type = models.CharField(max_length=10, choices=TaskType.choices)
     prompt_text = models.TextField()
-    prompt_image = models.ImageField(upload_to='writing_prompts/', blank=True, null=True)
+    prompt_image = models.URLField(max_length=500, blank=True, null=True)
     sample_answer = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 

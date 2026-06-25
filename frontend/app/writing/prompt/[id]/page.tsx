@@ -130,13 +130,7 @@ export default function WritingPromptPage() {
           <div className="flex-1 p-8 overflow-y-auto">
             <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{prompt.prompt_text}</p>
             {prompt.prompt_image && (
-              <div className="mt-6 overflow-x-auto">
-                <img
-                  src={prompt.prompt_image?.startsWith('http') ? prompt.prompt_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${prompt.prompt_image}`}
-                  alt="Prompt diagram"
-                  className="max-w-full rounded-lg border border-gray-200"
-                />
-              </div>
+              <img src={prompt.prompt_image} alt="Writing prompt" className="w-full rounded-xl mb-6" />
             )}
           </div>
         </div>
