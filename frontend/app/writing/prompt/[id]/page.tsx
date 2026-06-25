@@ -156,14 +156,14 @@ export default function WritingPromptPage() {
             {prompt.task_type === 'task_2' && (
               <p className="text-gray-700 mb-3">Write about the following topic:</p>
             )}
-            {prompt.task_type === 'task_1' && prompt.prompt_image && (
-              <img src={prompt.prompt_image} alt="Writing prompt" className="w-full rounded-xl mb-4" />
-            )}
             <div className="border border-blue-300 bg-blue-50 rounded-lg p-4 mb-4">
               <p className={`text-gray-800 leading-relaxed whitespace-pre-wrap font-semibold italic ${fontSize}`}>
                 {prompt.prompt_text}
               </p>
             </div>
+            {prompt.prompt_image && (
+              <img src={prompt.prompt_image} alt="Writing prompt" className="max-h-48 w-auto mx-auto rounded-lg mb-4 object-contain" />
+            )}
             <p className="text-gray-700">
               Write at least {prompt.task_type === 'task_1' ? '150' : '250'} words.
             </p>
