@@ -37,7 +37,7 @@ export default function ReadingListPage() {
     fetchTests();
   }, []);
 
-  const books = Array.from({ length: 19 }, (_, i) => i + 1);
+  const books = Array.from({ length: 11 }, (_, i) => i + 10);
 
   return (
     <DashboardLayout>
