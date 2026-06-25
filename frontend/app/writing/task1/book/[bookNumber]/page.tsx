@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
-import { ArrowLeft, PlayCircle, Lock, BookOpen, X, Clock } from "lucide-react";
+import { ArrowLeft, PlayCircle, Lock, BookOpen, X, Clock, Settings } from "lucide-react";
 
 interface WritingPrompt {
   id: number;
@@ -25,6 +25,7 @@ export default function WritingTask1BookPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sampleOpen, setSampleOpen] = useState<WritingPrompt | null>(null);
+  const [fontSize, setFontSize] = useState("text-base");
 
   useEffect(() => {
     const fetchPrompts = async () => {
@@ -138,9 +139,21 @@ export default function WritingTask1BookPage() {
               <span className="font-semibold text-gray-800">
                 Cambridge {sampleOpen.cambridge_book} • Test {sampleOpen.test_number} • Band 8+ Sample
               </span>
-              <button onClick={() => setSampleOpen(null)} className="p-1 rounded hover:bg-gray-100 transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                  onClick={() => {
+                    if (fontSize === "text-base") setFontSize("text-lg");
+                    else if (fontSize === "text-lg") setFontSize("text-xl");
+                    else setFontSize("text-base");
+                  }}
+                >
+                  <Settings className="w-4 h-4" /> Text Size
+                </button>
+                <button onClick={() => setSampleOpen(null)} className="p-1 rounded hover:bg-gray-100 transition-colors">
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
             </div>
             <div className="flex flex-1 overflow-hidden">
               <div className="w-1/2 flex flex-col overflow-hidden border-r border-gray-200 bg-white">
@@ -148,12 +161,12 @@ export default function WritingTask1BookPage() {
                   {sampleOpen.prompt_image && (
                     <img src={sampleOpen.prompt_image} alt="Prompt" className="max-w-full mb-4 rounded" />
                   )}
-                  <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">{sampleOpen.prompt_text}</p>
+                  <p className={`text-gray-800 ${fontSize} leading-relaxed whitespace-pre-wrap`}>{sampleOpen.prompt_text}</p>
                 </div>
               </div>
               <div className="w-1/2 flex flex-col overflow-hidden bg-white">
                 <div className="flex-1 overflow-y-auto p-6">
-                  <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">{sampleOpen.sample_answer}</p>
+                  <p className={`text-gray-800 ${fontSize} leading-relaxed whitespace-pre-wrap`}>{sampleOpen.sample_answer}</p>
                 </div>
               </div>
             </div>
