@@ -39,6 +39,8 @@ class ReadingQuestion(models.Model):
         SUMMARY_COMPLETION = 'summary_completion', 'Summary Completion'
         SENTENCE_COMPLETION = 'sentence_completion', 'Sentence Completion'
         SHORT_ANSWER = 'short_answer', 'Short Answer'
+        FORM_COMPLETION = 'form_completion', 'Form Completion'
+        TABLE_COMPLETION = 'table_completion', 'Table Completion'
 
     test = models.ForeignKey(ReadingTest, on_delete=models.CASCADE, related_name='questions')
     passage = models.CharField(max_length=1, choices=Passage.choices)
