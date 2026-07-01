@@ -176,7 +176,7 @@ export default function ReadingTestPage() {
   const applyHighlight = () => {
     if (!pendingSelection) return;
     const { paraIndex, start, end } = pendingSelection;
-    const key = `${activePassage}-${paraIndex}`;
+    const key = paraIndex >= 10000 ? `qs-${paraIndex - 10000}` : `${activePassage}-${paraIndex}`;
     setHighlights(prev => ({ ...prev, [key]: [...(prev[key] ?? []), { start, end }] }));
     setPendingSelection(null);
     window.getSelection()?.removeAllRanges();
@@ -185,7 +185,7 @@ export default function ReadingTestPage() {
   const removeHighlight = () => {
     if (!pendingSelection) return;
     const { paraIndex, start, end } = pendingSelection;
-    const key = `${activePassage}-${paraIndex}`;
+    const key = paraIndex >= 10000 ? `qs-${paraIndex - 10000}` : `${activePassage}-${paraIndex}`;
     setHighlights(prev => ({
       ...prev,
       [key]: (prev[key] ?? []).filter(r => r.end <= start || r.start >= end),
@@ -255,7 +255,7 @@ export default function ReadingTestPage() {
         <div>
           <p className="font-medium mb-4">
             <span className="w-7 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm mr-3">{idx + 1}</span>
-            <span>{question.question_text}</span>
+            <span data-paragraph-index={10000 + question.order_number}>{renderHighlightedParagraph(question.question_text, highlights[`qs-${question.order_number}`] ?? [])}</span>
           </p>
           <div className="pl-10 space-y-3">
             {opts.map((option, optIdx) => {
@@ -291,7 +291,7 @@ export default function ReadingTestPage() {
         <div>
           <p className="font-medium mb-4">
             <span className="w-7 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm mr-3">{idx + 1}</span>
-            <span>{question.question_text}</span>
+            <span data-paragraph-index={10000 + question.order_number}>{renderHighlightedParagraph(question.question_text, highlights[`qs-${question.order_number}`] ?? [])}</span>
           </p>
           <div className="pl-10 space-y-3">
             {tfOptions.map((opt) => (
@@ -343,7 +343,7 @@ export default function ReadingTestPage() {
         <div>
           <p className="font-medium mb-4">
             <span className="w-7 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm mr-3">{idx + 1}</span>
-            <span>{question.question_text}</span>
+            <span data-paragraph-index={10000 + question.order_number}>{renderHighlightedParagraph(question.question_text, highlights[`qs-${question.order_number}`] ?? [])}</span>
           </p>
           <div className="pl-10">
             <input
@@ -411,7 +411,7 @@ export default function ReadingTestPage() {
       <div>
         <p className="font-medium mb-4">
           <span className="w-7 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm mr-3">{idx + 1}</span>
-          <span>{question.question_text}</span>
+          <span data-paragraph-index={10000 + question.order_number}>{renderHighlightedParagraph(question.question_text, highlights[`qs-${question.order_number}`] ?? [])}</span>
         </p>
         <div className="pl-10">
           <input
@@ -565,7 +565,7 @@ export default function ReadingTestPage() {
           <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0">
             <h2 className="font-bold text-gray-800">Questions</h2>
           </div>
-          <div className="p-8 overflow-y-auto text-base text-gray-800 space-y-8">
+          <div className={`p-8 overflow-y-auto ${fontSize} text-gray-800 space-y-8`} onMouseUp={handleMouseUp}>
             {passageQuestions.length > 0 && (() => {
               const qNums = passageQuestions.map(q => q.order_number);
               const min = Math.min(...qNums);
