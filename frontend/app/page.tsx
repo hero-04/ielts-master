@@ -45,7 +45,7 @@ export default function LandingPage() {
               Master the <span className="text-primary">CD IELTS</span> with Realistic Practice
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mb-10 leading-relaxed">
-              Cambridge-based reading, listening, writing and vocabulary practice — built by a real British Council IELTS invigilator.
+              Realistic reading, listening, writing and vocabulary practice — built by a real British Council IELTS invigilator.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
               <Link href="/register" className="w-full sm:w-auto px-8 py-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors shadow-md flex items-center justify-center gap-2">
@@ -57,7 +57,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap justify-center gap-8">
               {([
-                [Library, "Cambridge Books 1–19"],
+                [Library, "Full Practice Test Library"],
                 [Shield,  "Real Exam Format"],
                 [Zap,     "Instant Band Scores"],
               ] as const).map(([Icon, text]) => (
@@ -80,11 +80,11 @@ export default function LandingPage() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {([
-                [BookOpen,   "Reading Practice",     "All Cambridge passage types with full 40-question tests and instant band score feedback."],
+                [BookOpen,   "Reading Practice",     "All passage types with full 40-question tests and instant band score feedback."],
                 [Headphones, "Listening Practice",   "Adjustable audio volume and real exam interface across all four sections."],
                 [PenTool,    "Writing Tasks 1 & 2",  "Timed writing environment with word count tracking and Band 8+ model answers."],
-                [Brain,      "Vocabulary Builder",   "Topic-based word lists drawn directly from Cambridge IELTS books."],
-                [Library,    "Cambridge Books 1–19", "Every test from every Cambridge book, organised and ready to practise."],
+                [Brain,      "Vocabulary Builder",   "Topic-based word lists to build exam-ready vocabulary."],
+                [Library,    "Full Test Library",    "Every practice test, organised and ready to practise."],
                 [BarChart2,  "Instant Band Scores",  "Accurate IELTS band scores calculated immediately after every Reading and Listening test."],
               ] as const).map(([Icon, title, desc]) => (
                 <div key={title} className="p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
@@ -117,7 +117,7 @@ export default function LandingPage() {
                 </div>
                 <ul className="space-y-3 mb-8 flex-1">
                   {[
-                    "Cambridge books 1–3 only (12 tests)",
+                    "12 practice tests included",
                     "Reading & Listening practice",
                     "Instant band score",
                     "No credit card required",
@@ -149,7 +149,7 @@ export default function LandingPage() {
                 <p className="text-blue-200 text-xs mb-6">or 100,000 so&apos;m for 3 months (save 35,000 so&apos;m)</p>
                 <ul className="space-y-3 mb-8 flex-1">
                   {[
-                    "All Cambridge books 1–19",
+                    "Full access to the practice test library",
                     "All modules (Reading, Listening, Writing, Speaking, Vocabulary)",
                     "Band 8+ sample answers",
                     "Unlimited practice tests",

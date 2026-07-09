@@ -98,7 +98,7 @@ export default function MyWritingsPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        Cambridge {s.prompt_cambridge_book} •{" "}
+                        Book {s.prompt_cambridge_book} •{" "}
                         <span className={taskColor(s.prompt_task_type)}>{taskLabel(s.prompt_task_type)}</span>
                         {" "}• Test {s.prompt_test_number}
                       </p>

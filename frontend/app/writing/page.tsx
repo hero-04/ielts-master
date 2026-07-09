@@ -5,7 +5,7 @@ import Link from "next/link";
 const sections = [
   {
     title: "Task 1 Practice",
-    description: "Graphs, charts, diagrams and letters from Cambridge IELTS books.",
+    description: "Graphs, charts, diagrams and letters for Task 1 practice.",
     href: "/writing/task1",
     icon: BarChart2,
     bg: "bg-amber-50",

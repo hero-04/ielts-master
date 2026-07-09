@@ -53,7 +53,7 @@ export default function SpeakingBookPage() {
         >
           <ArrowLeft className="w-4 h-4" /> Back to books
         </Link>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Cambridge {bookNumber}</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Book {bookNumber}</h2>
         <p className="text-gray-600 text-lg">Select a test to begin your speaking practice.</p>
       </div>
 

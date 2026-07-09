@@ -108,7 +108,7 @@ export default function MyTestsPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      Cambridge {attempt.cambridge_book}, Test {attempt.test_number},{" "}
+                      Book {attempt.cambridge_book}, Test {attempt.test_number},{" "}
                       <span className={isReading ? "text-primary" : "text-purple-600"}>
                         {isReading ? "Reading" : "Listening"}
                       </span>
