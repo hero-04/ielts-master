@@ -60,7 +60,7 @@ export default function WritingTask1BookPage() {
         >
           <ArrowLeft className="w-4 h-4" /> Back to books
         </Link>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Cambridge {bookNumber} — Task 1</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Book {bookNumber} — Task 1</h2>
         <p className="text-gray-600 text-lg">Select a test to practise.</p>
       </div>
 
@@ -137,7 +137,7 @@ export default function WritingTask1BookPage() {
           <div className="relative z-10 flex flex-col h-screen" onClick={(e) => e.stopPropagation()}>
             <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
               <span className="font-semibold text-gray-800">
-                Cambridge {sampleOpen.cambridge_book} • Test {sampleOpen.test_number} • Band 8+ Sample
+                Book {sampleOpen.cambridge_book} • Test {sampleOpen.test_number} • Band 8+ Sample
               </span>
               <div className="flex items-center gap-2">
                 <button

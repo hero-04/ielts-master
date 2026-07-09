@@ -117,7 +117,7 @@ export default function WritingPromptPage() {
           <div className="text-sm">Writing</div>
           <div className="h-6 w-[1px] bg-white/30" />
           <div className="text-sm text-gray-300">
-            Cambridge {prompt.cambridge_book} • Test {prompt.test_number} • {taskLabel}
+            Book {prompt.cambridge_book} • Test {prompt.test_number} • {taskLabel}
           </div>
         </div>
         <div className="flex items-center gap-4">

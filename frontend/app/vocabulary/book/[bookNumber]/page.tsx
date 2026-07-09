@@ -43,7 +43,7 @@ export default function VocabularyBookPage() {
         <Link href="/vocabulary" className="inline-flex items-center gap-1 text-primary hover:underline mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to books
         </Link>
-        <h2 className="text-3xl font-bold text-gray-900 mt-2">Cambridge {bookNumber} — Vocabulary</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mt-2">Book {bookNumber} — Vocabulary</h2>
       </div>
 
       {loading ? (
@@ -60,7 +60,7 @@ export default function VocabularyBookPage() {
             <BookOpen className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">No vocabulary yet</h3>
-          <p className="text-gray-500 max-w-sm">No vocabulary has been added for Cambridge {bookNumber} yet.</p>
+          <p className="text-gray-500 max-w-sm">No vocabulary has been added for Book {bookNumber} yet.</p>
         </div>
       ) : (
         <div className="space-y-3">
