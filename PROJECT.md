@@ -1,256 +1,129 @@
-# IELTS Master — Full Project Documentation
+# IELTS Master — Project Documentation
+
+Internal technical reference. Last reviewed: July 2026.
 
 ## 🎯 Project Vision
-A comprehensive IELTS preparation platform for Uzbek students, modeled after the official Computer Delivered IELTS (CD IELTS) experience. The platform covers all four IELTS sections with AI-powered feedback for Writing and Speaking. Built to be sold to individual students and IELTS learning centers across Uzbekistan.
+
+An IELTS preparation platform for Uzbek students, modeled on the Computer Delivered IELTS (CD IELTS) exam interface. Covers Reading, Listening, Writing, Speaking, and Vocabulary. Originally scoped around Cambridge IELTS book content — that plan is blocked (see **Content Licensing** below) and the platform is currently being rebuilt around original or properly licensed content.
 
 ---
 
 ## 👥 User Types
-1. **Guest** — can browse the platform, see limited content
-2. **Free Student** — full access to Reading and Listening, limited Writing/Speaking
-3. **Premium Student** — full AI feedback on Writing and Speaking
-4. **Learning Center Admin** — manages multiple student accounts under one subscription
-5. **Super Admin** — platform owner, manages everything
 
----
+Defined in `users.User` (`user_type` field) — the model and role structure exist, but subscription enforcement and billing are not wired up yet (see Known Issues).
 
-## 💰 Pricing Model
-- **Free tier:** Reading + Listening + Vocabulary (unlimited)
-- **Premium individual:** 50,000 UZS/month
-- **Learning center bulk:** 30,000 UZS/student/month (minimum 10 students)
-- **Payment methods:** Payme, Click, Xazna (Uzbek payment gateways)
+1. **Guest** — unauthenticated browsing
+2. **Free Student** — default role on registration
+3. **Premium Student** — intended full-access tier; no gating logic currently enforces this distinction
+4. **Learning Center Admin** — intended bulk-account manager role
+5. **Super Admin** — Django staff/superuser
 
 ---
 
 ## 🏗️ Tech Stack
 
+### Backend
+- **Framework:** Django 5.2 + Django REST Framework
+- **Language:** Python 3.12
+- **Auth:** JWT via `djangorestframework-simplejwt` (access token 60 min, refresh 7 days, rotation + blacklist on refresh)
+- **Database:** PostgreSQL, hosted on Render (SQLite is the local dev fallback when `DATABASE_URL` is unset)
+- **Media/file storage:** Cloudinary (`django-cloudinary-storage`) when `CLOUDINARY_CLOUD_NAME` is set, falls back to local `MEDIA_ROOT` otherwise
+- **Static files:** WhiteNoise
+- **Apps:** `users`, `reading`, `listening`, `vocabulary`, `writing`, `speaking`, `payments`
+
 ### Frontend
-- **Framework:** Next.js 14 (React) with TypeScript
-- **Styling:** Tailwind CSS
-- **State management:** Zustand
+- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript
+- **Styling:** Tailwind CSS 4
+- **State management:** Zustand (`frontend/store/useAuthStore.ts`)
 - **HTTP client:** Axios
 
-### Backend
-- **Framework:** Django 5 + Django REST Framework
-- **Language:** Python 3.12
-- **Authentication:** JWT (djangorestframework-simplejwt)
-- **Task queue:** Celery + Redis (for AI processing)
-
-### Database
-- **Primary:** PostgreSQL 16
-- **Cache:** Redis
-
-### AI & APIs
-- **Writing grading:** Gemini API (primary), OpenAI API (fallback)
-- **Speaking STT:** Google Speech-to-Text API
-- **Speaking grading:** Gemini API
-
-### Infrastructure
-- **Server:** Oracle Cloud Free Tier (Ubuntu 22.04)
-- **Web server:** Nginx
-- **Process manager:** Gunicorn + Systemd
-- **Future mobile:** Flutter (iOS + Android)
+### Not currently implemented (present in earlier planning docs, not in the codebase)
+- No Celery / Redis — no async task queue exists in `INSTALLED_APPS`
+- No AI grading integration — no Gemini, OpenAI, or Google Speech-to-Text calls anywhere in the backend
+- No mobile app
 
 ---
 
-## 📚 Platform Sections
+## 📚 Module Status
 
-### 1. READING (Build First)
-- Passages modeled after Cambridge IELTS books (original content)
-- Question types:
-  - Multiple Choice (single and multiple answers)
-  - Matching Headings
-  - Matching Information
-  - True / False / Not Given
-  - Yes / No / Not Given
-  - Summary Completion
-  - Sentence Completion
-  - Short Answer Questions
-- Timer (20 minutes per passage, 60 minutes full test)
-- Instant results with explanations
-- Band score calculation
-- Review mode (see correct answers with highlighted text)
-- 3 passages per full Reading test (Academic)
+### Reading — built
+- Question types (see `reading.models.ReadingQuestion.QuestionType`): multiple choice (single + multiple answer), true/false/not given, yes/no/not given, matching headings, matching information, short answer, sentence completion, summary completion (inline blank), form completion, table completion (multi-blank)
+- Text highlighting and adjustable font size on the question/passage panel
+- Timer with `localStorage` persistence (survives refresh/navigation away)
+- Attempt + answer persistence (`ReadingAttempt`, `ReadingAnswer`), band score and raw score stored per attempt
+- Review mode via `/reading/results/[id]`
 
-### 2. LISTENING (Build Second)
-- Audio player with CD IELTS-style interface
-- Question types:
-  - Multiple Choice
-  - Form/Note/Table Completion
-  - Matching
-  - Plan/Map/Diagram Labelling
-- 4 sections per full Listening test
-- Auto-advance between sections
-- Transcript available after test
-- Band score calculation
+### Listening — built
+- Same question type set as Reading, plus listening-specific types: diagram labelling, drag & drop, selection grid, matching
+- In-browser audio playback
+- Multi-blank inline inputs for completion-type questions
+- Answers persisted to `localStorage` during the attempt; attempt/answer/band score persistence mirrors Reading
 
-### 3. VOCABULARY (Build Third)
-- Flashcard system (spaced repetition)
-- Word categories: Academic Word List, IELTS topic vocabulary
-- Topics: Environment, Technology, Health, Education, Society, etc.
-- Daily word goals
-- Progress tracking
+### Writing — built
+- Task 1 and Task 2 prompts (`WritingPrompt`, distinguished by `task_type`)
+- Task 1 supports an image prompt via `prompt_image` (an external URL field — there is no file upload endpoint)
+- Timer with `localStorage` persistence
+- Adjustable font size
+- Sample answer modal (Band 8+ reference answers stored per prompt)
+- Realistic exam-style instruction formatting (time limit, minimum word count, task box)
+- Submissions are stored (`WritingSubmission`, tracks word count) — **no AI grading or feedback exists**; submissions are saved but not scored
 
-### 4. WRITING (Build Fourth — Premium)
-- Task 1: Academic (graphs, charts, diagrams) and General (letters)
-- Task 2: Essay (all types — opinion, discussion, problem-solution, etc.)
-- AI grading based on official IELTS band descriptors:
-  - Task Achievement / Task Response
-  - Coherence and Cohesion
-  - Lexical Resource
-  - Grammatical Range and Accuracy
-- Sample answers from Simon, Pauline, Tahasani (for reference training)
-- Detailed feedback per criterion
-- Band score per task and overall
+### Speaking — built (practice UI only)
+- Part 1 / Part 2 / Part 3 structure (`SpeakingQuestion.Part`)
+- Content is fully original, not derived from Cambridge or any third-party materials
+- No submission/attempt model exists yet — there is nowhere to persist a recording, transcript, or score. Practice is currently presentation-only (question + sample answer), not a graded exam flow
 
-### 5. SPEAKING (Build Fifth — Premium)
-- Part 1: Personal questions
-- Part 2: Cue card (with 1-minute preparation timer)
-- Part 3: Discussion questions
-- Voice recording in browser (WebRTC)
-- Google Speech-to-Text transcription
-- AI grading based on IELTS Speaking band descriptors:
-  - Fluency and Coherence
-  - Lexical Resource
-  - Grammatical Range and Accuracy
-  - Pronunciation
-- Sample answers for each topic
-- Model answers from official Cambridge materials
+### Vocabulary — built
+- Word list tied to a book-number field (`cambridge_book` on `VocabularyWord` — see Known Issues on the field name)
+- Organized by topic (Environment, Technology, Health, Education, Society, Science, Business, Culture) and difficulty
 
 ---
 
-## 🗄️ Database Schema (Core Tables)
+## ⚠️ Content Licensing
 
-### Users
-```
-users
-- id, email, password_hash, full_name
-- user_type (guest/free/premium/center_admin/super_admin)
-- subscription_end_date, created_at
-- learning_center_id (nullable)
-```
+**Cambridge University Press explicitly denied permission to use Cambridge IELTS book content on this platform, including on free tiers** (support ticket 3476747, response received June 2026).
 
-### Content
-```
-reading_tests
-- id, title, difficulty, passage_a, passage_b, passage_c, created_at
+As of July 2026:
+- All Cambridge branding, book titles, and book-specific test content have been removed from the frontend (landing page, module menus, test headers, results, my-tests, my-writings).
+- Cambridge-sourced passages, prompts, audio, and questions have been removed from the database.
+- Top-level module menus (Reading, Listening, Writing Task 1/2, Vocabulary) currently render an empty state ("No tests available yet") since there is no content behind them.
+- Backend models, views, and API endpoints were **not** altered — the schema still supports adding tests (the ability to add new content is intact, only the Cambridge content itself and its branding were removed).
+- The `cambridge_book` field name still exists on `ReadingTest`, `ListeningTest`, `WritingPrompt`, `SpeakingTest`, and `VocabularyWord` models — it was left as-is to avoid a migration during the takedown, but it is now just a generic book/set number used for grouping. See Known Issues.
 
-reading_questions
-- id, test_id, passage (A/B/C), question_type, question_text
-- correct_answer, explanation, order_number
-
-listening_tests
-- id, title, difficulty, audio_url, transcript, created_at
-
-listening_questions
-- id, test_id, section (1-4), question_type, question_text
-- correct_answer, order_number
-
-vocabulary_words
-- id, word, definition, example_sentence, topic, difficulty
-- audio_url (pronunciation)
-```
-
-### Results
-```
-test_attempts
-- id, user_id, test_type (reading/listening/writing/speaking)
-- test_id, started_at, completed_at, band_score, raw_score
-
-reading_answers
-- id, attempt_id, question_id, user_answer, is_correct
-
-writing_submissions
-- id, user_id, task_type (1/2), prompt, user_essay
-- ai_feedback (JSON), band_score, submitted_at
-
-speaking_submissions
-- id, user_id, part (1/2/3), topic, audio_url
-- transcript, ai_feedback (JSON), band_score, submitted_at
-```
-
-### Payments
-```
-subscriptions
-- id, user_id, plan_type, amount, currency (UZS)
-- payment_method (payme/click/xazna)
-- started_at, ends_at, status (active/expired/cancelled)
-
-learning_centers
-- id, name, contact_person, phone, email
-- student_limit, price_per_student, contract_start, contract_end
-```
+The platform has no test content in production until this is resolved with either original material or a properly licensed source.
 
 ---
 
-## 🎨 Design Principles
-- Clean, modern UI — better than sanokulov.uz
-- Mobile-first responsive design
-- Dark mode support
-- CD IELTS-style test interface (feels like the real exam)
-- Uzbek and English language toggle
-- Fast loading (optimized for Uzbekistan internet speeds)
+## 🔒 Security
+
+- Auth endpoints are rate-limited via DRF `ScopedRateThrottle`:
+  - `/api/auth/login/` — 5 requests/minute per IP (anonymous)
+  - `/api/auth/register/` — 10 requests/hour per IP (anonymous)
+- Global DRF throttle defaults: 100 requests/day (anonymous), 1000 requests/day (authenticated)
+- JWT refresh tokens rotate and are blacklisted after use (`ROTATE_REFRESH_TOKENS`, `BLACKLIST_AFTER_ROTATION`)
+- CORS is restricted to `localhost:3000` in dev plus `FRONTEND_URL` in production (not wide open)
 
 ---
 
-## 🚀 Build Order
+## 🚧 Known Issues / Tech Debt
 
-### Phase 1 — Foundation (Weeks 1-2)
-- [ ] Django project setup with PostgreSQL
-- [ ] Next.js frontend setup
-- [ ] User authentication (register, login, JWT)
-- [ ] Admin panel for content upload
-- [ ] Basic UI components
+- **Content:** No test content in any module — Cambridge material was removed and nothing has replaced it yet (see Content Licensing).
+- **Payments:** Not implemented. `payments` app has `Subscription` and `LearningCenter` models defined, but `payments/views.py` is empty and there are no Payme/Click/Xazna integrations or URLs registered. Subscription tiers exist as a data model but nothing enforces or sells them.
+- **AI grading:** Not implemented for Writing or Speaking, despite being part of the original vision. No AI provider is integrated anywhere in the backend.
+- **Speaking persistence:** No model exists to store a speaking attempt, recording, transcript, or score.
+- **`cambridge_book` field naming:** Left in place across five models purely to avoid a migration; conceptually it's now just a book/set number. Should be renamed (e.g. to `book_number`) in a future migration once content strategy is settled, to stop the naming from being misleading in the admin and API responses.
+- **Database:** Render's free-tier PostgreSQL expires/resets periodically and has no automated backup in place — needs manual monitoring and a backup plan before any real content or user data goes back in.
+- **`DEBUG` and `SECRET_KEY` defaults:** `settings.py` falls back to `DEBUG=True` and a hardcoded insecure `SECRET_KEY` if the corresponding env vars aren't set — confirm these are properly set in the Render environment, not relying on the fallback.
 
-### Phase 2 — Reading (Weeks 3-4)
-- [ ] Reading test interface (CD IELTS style)
-- [ ] All question types implemented
-- [ ] Timer functionality
-- [ ] Results and band score calculation
-- [ ] Review mode
+---
 
-### Phase 3 — Listening (Weeks 5-6)
-- [ ] Audio player component
-- [ ] Listening test interface
-- [ ] All question types
-- [ ] Results and band score
+## 🚀 Deployment
 
-### Phase 4 — Vocabulary (Week 7)
-- [ ] Flashcard system
-- [ ] Spaced repetition algorithm
-- [ ] Topic categories
-
-### Phase 5 — Deploy & Test (Week 8)
-- [ ] Deploy to Oracle Cloud
-- [ ] Nginx + Gunicorn setup
-- [ ] Domain setup
-- [ ] Load testing
-- [ ] Bug fixes
-
-### Phase 6 — Writing AI (Weeks 9-10)
-- [ ] Gemini API integration
-- [ ] Writing submission interface
-- [ ] AI grading pipeline
-- [ ] Feedback display
-
-### Phase 7 — Speaking AI (Weeks 11-12)
-- [ ] Voice recording interface
-- [ ] Google STT integration
-- [ ] AI grading pipeline
-- [ ] Feedback display
-
-### Phase 8 — Payments (Week 13)
-- [ ] Payme integration
-- [ ] Click integration
-- [ ] Xazna integration
-- [ ] Subscription management
-- [ ] Learning center bulk billing
-
-### Phase 9 — Polish & Scale (Week 14+)
-- [ ] Analytics dashboard
-- [ ] Email notifications
-- [ ] Mobile app (Flutter)
-- [ ] Marketing landing page
+- **Frontend:** Vercel — [ielts-master-red.vercel.app](https://ielts-master-red.vercel.app)
+- **Backend:** Render — [ielts-master-zxlv.onrender.com](https://ielts-master-zxlv.onrender.com)
+- **Database:** PostgreSQL on Render, free tier — periodically expires/resets, needs monitoring and a backup strategy (see Known Issues)
+- **Media storage:** Cloudinary
+- **Static files:** served by WhiteNoise from the Django app itself
 
 ---
 
@@ -258,52 +131,51 @@ learning_centers
 
 ```
 ielts-master/
-├── backend/                  # Django project
-│   ├── config/               # Settings, URLs, WSGI
-│   ├── users/                # Auth, profiles, subscriptions
-│   ├── reading/              # Reading tests and questions
-│   ├── listening/            # Listening tests
-│   ├── vocabulary/           # Flashcards
-│   ├── writing/              # Writing submissions + AI
-│   ├── speaking/             # Speaking submissions + AI
-│   ├── payments/             # Payme, Click, Xazna
-│   └── requirements.txt
-├── frontend/                 # Next.js project
-│   ├── app/                  # Pages and layouts
-│   ├── components/           # Reusable UI components
-│   ├── lib/                  # API clients, utilities
-│   └── public/               # Static assets
-└── PROJECT.md                # This file
+├── config/                   # Django settings, root URLs, WSGI
+├── users/                    # Auth, custom User model, JWT views
+├── reading/                  # Reading tests, questions, attempts
+├── listening/                # Listening tests, questions, attempts
+├── vocabulary/                # Vocabulary words
+├── writing/                   # Writing prompts + submissions (no AI grading)
+├── speaking/                  # Speaking tests + questions (no submission model yet)
+├── payments/                  # Subscription/LearningCenter models only — no views/integration
+├── requirements.txt
+├── frontend/                  # Next.js project
+│   ├── app/                   # Pages and layouts (App Router)
+│   ├── components/            # Reusable UI components
+│   ├── store/                 # Zustand stores
+│   ├── lib/                   # API client, utilities
+│   └── public/                # Static assets
+└── PROJECT.md                 # This file
 ```
+
+Note: the app is a single Django project at the repo root (not nested under a `backend/` directory as earlier drafts of this doc assumed).
 
 ---
 
-## 🔑 Environment Variables Needed
+## 🔑 Environment Variables (actual, from `config/settings.py`)
+
 ```
 # Django
 SECRET_KEY=
-DATABASE_URL=
-REDIS_URL=
+DEBUG=
+DATABASE_URL=            # Postgres connection string; falls back to local sqlite3 if unset
 
-# AI APIs
-GEMINI_API_KEY=
-OPENAI_API_KEY=
-GOOGLE_SPEECH_API_KEY=
+# CORS
+FRONTEND_URL=            # added to CORS_ALLOWED_ORIGINS in addition to localhost:3000
 
-# Payments
-PAYME_MERCHANT_ID=
-CLICK_MERCHANT_ID=
-XAZNA_API_KEY=
-
-# Storage (for audio files)
-AWS_S3_BUCKET= (or Oracle Object Storage)
+# Media storage (Cloudinary)
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
+
+Not currently read by the codebase, despite appearing in some earlier planning docs/`.env.example`: `REDIS_URL`, `CELERY_BROKER_URL`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_APPLICATION_CREDENTIALS`, Payme/Click/Xazna keys. These map to features that aren't built yet (see Known Issues).
 
 ---
 
-## 📞 Business Model Summary
-- Target: Uzbek IELTS students and learning centers
-- USP: Best CD IELTS simulation + AI feedback in Uzbekistan
-- Revenue: Individual subscriptions + Learning center contracts
-- Team needed: 1 developer (you), 1 support technician, 1 sales manager
-- Future: Mobile app, expand to other Central Asian countries
+## 📞 Business Model
+
+Originally planned as a public paid platform for individual Uzbek IELTS students plus learning-center contracts (see the old Pricing Model draft this section replaces). That plan assumed Cambridge book content, which is no longer available (see Content Licensing).
+
+**Current thinking:** leaning toward private/closed distribution to individual learning centers (direct relationships, custom content per center) rather than a public launch, until either original content is built out or a proper licensing arrangement is in place. Public pricing tiers, payment integration, and open registration are on hold pending that decision — no committed pricing model right now.
