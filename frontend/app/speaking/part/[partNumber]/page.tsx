@@ -9,7 +9,7 @@ import { ArrowLeft, PlayCircle, Clock, MessageCircle, Mic } from "lucide-react";
 
 interface SpeakingTest {
   id: number;
-  cambridge_book: number;
+  book_number: number;
   test_number: number;
 }
 

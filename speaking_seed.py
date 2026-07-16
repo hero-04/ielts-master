@@ -6,7 +6,7 @@ from speaking.models import SpeakingTest, SpeakingQuestion
 
 DATA = [
     {
-        "cambridge_book": 10,
+        "book_number": 10,
         "test_number": 1,
         "part1": [
             "Do you work or are you a student?",
@@ -44,7 +44,7 @@ DATA = [
         ],
     },
     {
-        "cambridge_book": 10,
+        "book_number": 10,
         "test_number": 2,
         "part1": [
             "Do you have any hobbies?",
@@ -82,7 +82,7 @@ DATA = [
         ],
     },
     {
-        "cambridge_book": 11,
+        "book_number": 11,
         "test_number": 1,
         "part1": [
             "What's your favourite animal?",
@@ -128,14 +128,14 @@ def run():
 
     for entry in DATA:
         test, created = SpeakingTest.objects.get_or_create(
-            cambridge_book=entry["cambridge_book"],
+            book_number=entry["book_number"],
             test_number=entry["test_number"],
         )
         if created:
             created_tests += 1
-            print(f"Created test: Cambridge {entry['cambridge_book']} Test {entry['test_number']}")
+            print(f"Created test: Book {entry['book_number']} Test {entry['test_number']}")
         else:
-            print(f"Already exists: Cambridge {entry['cambridge_book']} Test {entry['test_number']} — skipping")
+            print(f"Already exists: Book {entry['book_number']} Test {entry['test_number']} — skipping")
             continue
 
         for i, q_text in enumerate(entry["part1"], start=1):

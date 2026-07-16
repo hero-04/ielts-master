@@ -4,10 +4,10 @@ from .models import WritingPrompt, WritingSubmission
 
 @admin.register(WritingPrompt)
 class WritingPromptAdmin(admin.ModelAdmin):
-    list_display = ('cambridge_book', 'test_number', 'task_type', 'created_at')
-    list_filter = ('cambridge_book', 'test_number', 'task_type')
+    list_display = ('book_number', 'test_number', 'task_type', 'created_at')
+    list_filter = ('book_number', 'test_number', 'task_type')
     search_fields = ('prompt_text',)
-    ordering = ('cambridge_book', 'test_number', 'task_type')
+    ordering = ('book_number', 'test_number', 'task_type')
 
 
 @admin.register(WritingSubmission)

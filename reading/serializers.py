@@ -10,14 +10,14 @@ class ReadingQuestionSerializer(serializers.ModelSerializer):
 class ReadingTestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingTest
-        fields = ['id', 'title', 'cambridge_book', 'test_number', 'created_at']
+        fields = ['id', 'title', 'book_number', 'test_number', 'created_at']
 
 class ReadingTestDetailSerializer(serializers.ModelSerializer):
     questions = ReadingQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = ReadingTest
-        fields = ['id', 'title', 'cambridge_book', 'test_number', 'passage_a_title', 'passage_a', 'passage_b_title', 'passage_b', 'passage_c_title', 'passage_c', 'questions', 'created_at']
+        fields = ['id', 'title', 'book_number', 'test_number', 'passage_a_title', 'passage_a', 'passage_b_title', 'passage_b', 'passage_c_title', 'passage_c', 'questions', 'created_at']
 
 class ReadingAnswerSubmissionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
@@ -49,9 +49,9 @@ class ReadingAttemptResultSerializer(serializers.ModelSerializer):
         fields = ['id', 'test_id', 'test_title', 'started_at', 'completed_at', 'raw_score', 'band_score', 'total_questions', 'answers']
 
 class ReadingAttemptListSerializer(serializers.ModelSerializer):
-    cambridge_book = serializers.IntegerField(source='test.cambridge_book', read_only=True)
+    book_number = serializers.IntegerField(source='test.book_number', read_only=True)
     test_number = serializers.IntegerField(source='test.test_number', read_only=True)
 
     class Meta:
         model = ReadingAttempt
-        fields = ['id', 'cambridge_book', 'test_number', 'band_score', 'raw_score', 'started_at', 'completed_at']
+        fields = ['id', 'book_number', 'test_number', 'band_score', 'raw_score', 'started_at', 'completed_at']

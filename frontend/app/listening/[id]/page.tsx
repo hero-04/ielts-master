@@ -21,7 +21,7 @@ interface ListeningQuestion {
 interface ListeningTest {
   id: number;
   title: string;
-  cambridge_book: number;
+  book_number: number;
   test_number: number;
   audio_url: string;
   transcript: string;
@@ -444,7 +444,7 @@ export default function ListeningTestPage() {
           <div className="text-sm">Listening</div>
           <div className="h-6 w-[1px] bg-white/30" />
           <div className="text-sm text-gray-300">
-            Book {test.cambridge_book} • Test {test.test_number}
+            Book {test.book_number} • Test {test.test_number}
           </div>
         </div>
         <div className={`flex items-center gap-2 font-mono text-xl font-bold bg-black/20 px-4 py-1.5 rounded ${timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-white'}`}>

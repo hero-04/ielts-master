@@ -9,7 +9,7 @@ import { ArrowLeft, PlayCircle, Lock, BookOpen, X, Clock, Settings } from "lucid
 
 interface WritingPrompt {
   id: number;
-  cambridge_book: number;
+  book_number: number;
   test_number: number;
   task_type: string;
   prompt_text: string;
@@ -31,7 +31,7 @@ export default function WritingTask1BookPage() {
     const fetchPrompts = async () => {
       try {
         const res = await api.get("/writing/prompts/", {
-          params: { cambridge_book: bookNumber, task_type: "task_1" },
+          params: { book_number: bookNumber, task_type: "task_1" },
         });
         const data: WritingPrompt[] = res.data.results ?? res.data;
         const map: Record<number, WritingPrompt> = {};
@@ -137,7 +137,7 @@ export default function WritingTask1BookPage() {
           <div className="relative z-10 flex flex-col h-screen" onClick={(e) => e.stopPropagation()}>
             <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
               <span className="font-semibold text-gray-800">
-                Book {sampleOpen.cambridge_book} • Test {sampleOpen.test_number} • Band 8+ Sample
+                Book {sampleOpen.book_number} • Test {sampleOpen.test_number} • Band 8+ Sample
               </span>
               <div className="flex items-center gap-2">
                 <button

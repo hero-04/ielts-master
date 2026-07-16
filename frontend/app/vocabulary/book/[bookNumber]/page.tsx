@@ -12,7 +12,7 @@ interface VocabularyWord {
   word: string;
   definition: string;
   example_sentence?: string;
-  cambridge_book: number;
+  book_number: number;
 }
 
 export default function VocabularyBookPage() {
@@ -25,7 +25,7 @@ export default function VocabularyBookPage() {
     if (bookNumber) {
       const fetchWords = async () => {
         try {
-          const res = await api.get("/vocabulary/words/", { params: { cambridge_book: bookNumber } });
+          const res = await api.get("/vocabulary/words/", { params: { book_number: bookNumber } });
           setWords(res.data.results ?? res.data);
         } catch {
           setError("Could not load vocabulary. Please try again later.");

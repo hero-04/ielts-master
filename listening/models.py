@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 class ListeningTest(models.Model):
     title = models.CharField(max_length=255)
-    cambridge_book = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     audio_url = models.URLField(max_length=500, verbose_name='Audio URL')
     transcript = models.TextField(blank=True, null=True, verbose_name='Transcript')
@@ -13,10 +13,10 @@ class ListeningTest(models.Model):
     class Meta:
         db_table = 'listening_tests'
         ordering = ['-created_at']
-        unique_together = [['cambridge_book', 'test_number']]
+        unique_together = [['book_number', 'test_number']]
 
     def __str__(self):
-        return f"Cambridge {self.cambridge_book} - Test {self.test_number}"
+        return f"Book {self.book_number} - Test {self.test_number}"
 
 
 class ListeningQuestion(models.Model):

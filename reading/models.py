@@ -7,7 +7,7 @@ class ReadingTest(models.Model):
     passage_a_title = models.CharField(max_length=255, blank=True, default='')
     passage_b_title = models.CharField(max_length=255, blank=True, default='')
     passage_c_title = models.CharField(max_length=255, blank=True, default='')
-    cambridge_book = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     passage_a = models.TextField(verbose_name='Passage 1')
     passage_b = models.TextField(verbose_name='Passage 2')
@@ -17,10 +17,10 @@ class ReadingTest(models.Model):
     class Meta:
         db_table = 'reading_tests'
         ordering = ['-created_at']
-        unique_together = [['cambridge_book', 'test_number']]
+        unique_together = [['book_number', 'test_number']]
 
     def __str__(self):
-        return f"Cambridge {self.cambridge_book} - Test {self.test_number}"
+        return f"Book {self.book_number} - Test {self.test_number}"
 
 
 class ReadingQuestion(models.Model):

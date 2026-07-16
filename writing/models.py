@@ -8,7 +8,7 @@ class WritingPrompt(models.Model):
         TASK_1 = 'task_1', 'Task 1'
         TASK_2 = 'task_2', 'Task 2'
 
-    cambridge_book = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     task_type = models.CharField(max_length=10, choices=TaskType.choices)
     prompt_text = models.TextField()
@@ -18,11 +18,11 @@ class WritingPrompt(models.Model):
 
     class Meta:
         db_table = 'writing_prompts'
-        unique_together = [['cambridge_book', 'test_number', 'task_type']]
-        ordering = ['cambridge_book', 'test_number', 'task_type']
+        unique_together = [['book_number', 'test_number', 'task_type']]
+        ordering = ['book_number', 'test_number', 'task_type']
 
     def __str__(self):
-        return f"Cambridge {self.cambridge_book} - Test {self.test_number} - {self.get_task_type_display()}"
+        return f"Book {self.book_number} - Test {self.test_number} - {self.get_task_type_display()}"
 
 
 class WritingSubmission(models.Model):

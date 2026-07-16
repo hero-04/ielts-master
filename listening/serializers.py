@@ -9,14 +9,14 @@ class ListeningQuestionSerializer(serializers.ModelSerializer):
 class ListeningTestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListeningTest
-        fields = ['id', 'title', 'cambridge_book', 'test_number', 'created_at']
+        fields = ['id', 'title', 'book_number', 'test_number', 'created_at']
 
 class ListeningTestDetailSerializer(serializers.ModelSerializer):
     questions = ListeningQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = ListeningTest
-        fields = ['id', 'title', 'cambridge_book', 'test_number', 'audio_url', 'transcript', 'questions', 'created_at']
+        fields = ['id', 'title', 'book_number', 'test_number', 'audio_url', 'transcript', 'questions', 'created_at']
 
 class ListeningAnswerSubmissionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
@@ -47,9 +47,9 @@ class ListeningAttemptResultSerializer(serializers.ModelSerializer):
         fields = ['id', 'test_id', 'test_title', 'started_at', 'completed_at', 'raw_score', 'band_score', 'total_questions', 'answers']
 
 class ListeningAttemptListSerializer(serializers.ModelSerializer):
-    cambridge_book = serializers.IntegerField(source='test.cambridge_book', read_only=True)
+    book_number = serializers.IntegerField(source='test.book_number', read_only=True)
     test_number = serializers.IntegerField(source='test.test_number', read_only=True)
 
     class Meta:
         model = ListeningAttempt
-        fields = ['id', 'cambridge_book', 'test_number', 'band_score', 'raw_score', 'started_at', 'completed_at']
+        fields = ['id', 'book_number', 'test_number', 'band_score', 'raw_score', 'started_at', 'completed_at']

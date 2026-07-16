@@ -10,7 +10,7 @@ import { api } from "@/lib/api";
 interface ListeningTest {
   id: number;
   title: string;
-  cambridge_book: number;
+  book_number: number;
   test_number: number;
 }
 
@@ -29,7 +29,7 @@ export default function ListeningBookPage() {
         const data: ListeningTest[] = res.data.results || res.data;
         const map: Record<number, ListeningTest> = {};
         for (const test of data) {
-          if (test.cambridge_book === bookNumber) {
+          if (test.book_number === bookNumber) {
             map[test.test_number] = test;
           }
         }

@@ -3,17 +3,17 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class SpeakingTest(models.Model):
-    cambridge_book = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'speaking_tests'
-        unique_together = [['cambridge_book', 'test_number']]
-        ordering = ['cambridge_book', 'test_number']
+        unique_together = [['book_number', 'test_number']]
+        ordering = ['book_number', 'test_number']
 
     def __str__(self):
-        return f"Cambridge {self.cambridge_book} - Test {self.test_number}"
+        return f"Book {self.book_number} - Test {self.test_number}"
 
 
 class SpeakingQuestion(models.Model):

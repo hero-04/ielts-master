@@ -8,10 +8,10 @@ class ReadingQuestionInline(admin.StackedInline):
 
 @admin.register(ReadingTest)
 class ReadingTestAdmin(admin.ModelAdmin):
-    list_display = ('title', 'cambridge_book', 'test_number', 'created_at')
+    list_display = ('title', 'book_number', 'test_number', 'created_at')
     search_fields = ('title',)
-    list_filter = ('cambridge_book', 'test_number')
-    fields = ('cambridge_book', 'test_number', 'passage_a_title', 'passage_a', 'passage_b_title', 'passage_b', 'passage_c_title', 'passage_c')
+    list_filter = ('book_number', 'test_number')
+    fields = ('book_number', 'test_number', 'passage_a_title', 'passage_a', 'passage_b_title', 'passage_b', 'passage_c_title', 'passage_c')
     inlines = [ReadingQuestionInline]
 
 @admin.register(ReadingQuestion)

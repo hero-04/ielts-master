@@ -9,7 +9,7 @@ import { ArrowLeft, Mic, Lock } from "lucide-react";
 
 interface SpeakingTest {
   id: number;
-  cambridge_book: number;
+  book_number: number;
   test_number: number;
 }
 
@@ -28,7 +28,7 @@ export default function SpeakingBookPage() {
         const data: SpeakingTest[] = res.data.results ?? res.data;
         const map: Record<number, SpeakingTest> = {};
         for (const t of data) {
-          if (t.cambridge_book === bookNumber) {
+          if (t.book_number === bookNumber) {
             map[t.test_number] = t;
           }
         }

@@ -14,10 +14,10 @@ class WritingPromptListView(generics.ListAPIView):
 
     def get_queryset(self):
         qs = WritingPrompt.objects.all()
-        cambridge_book = self.request.query_params.get('cambridge_book')
+        book_number = self.request.query_params.get('book_number')
         task_type = self.request.query_params.get('task_type')
-        if cambridge_book:
-            qs = qs.filter(cambridge_book=cambridge_book)
+        if book_number:
+            qs = qs.filter(book_number=book_number)
         if task_type:
             qs = qs.filter(task_type=task_type)
         return qs

@@ -11,7 +11,7 @@ class SpeakingQuestionSerializer(serializers.ModelSerializer):
 class SpeakingTestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpeakingTest
-        fields = ['id', 'cambridge_book', 'test_number']
+        fields = ['id', 'book_number', 'test_number']
 
 
 class SpeakingTestDetailSerializer(serializers.ModelSerializer):
@@ -19,4 +19,4 @@ class SpeakingTestDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SpeakingTest
-        fields = ['id', 'cambridge_book', 'test_number', 'questions']
+        fields = ['id', 'book_number', 'test_number', 'questions']

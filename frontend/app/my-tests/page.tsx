@@ -8,7 +8,7 @@ import { BookOpen, Headphones, ClipboardList } from "lucide-react";
 
 interface Attempt {
   id: number;
-  cambridge_book: number;
+  book_number: number;
   test_number: number;
   band_score: string;
   raw_score: number;
@@ -108,7 +108,7 @@ export default function MyTestsPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      Book {attempt.cambridge_book}, Test {attempt.test_number},{" "}
+                      Book {attempt.book_number}, Test {attempt.test_number},{" "}
                       <span className={isReading ? "text-primary" : "text-purple-600"}>
                         {isReading ? "Reading" : "Listening"}
                       </span>

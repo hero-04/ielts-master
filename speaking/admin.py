@@ -11,7 +11,7 @@ class SpeakingQuestionInline(admin.TabularInline):
 
 @admin.register(SpeakingTest)
 class SpeakingTestAdmin(admin.ModelAdmin):
-    list_display = ('cambridge_book', 'test_number', 'created_at')
-    list_filter = ('cambridge_book', 'test_number')
-    ordering = ('cambridge_book', 'test_number')
+    list_display = ('book_number', 'test_number', 'created_at')
+    list_filter = ('book_number', 'test_number')
+    ordering = ('book_number', 'test_number')
     inlines = [SpeakingQuestionInline]

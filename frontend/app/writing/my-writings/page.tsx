@@ -12,7 +12,7 @@ interface WritingSubmission {
   submission_text: string;
   word_count: number;
   created_at: string;
-  prompt_cambridge_book: number;
+  prompt_book_number: number;
   prompt_test_number: number;
   prompt_task_type: string;
 }
@@ -98,7 +98,7 @@ export default function MyWritingsPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        Book {s.prompt_cambridge_book} •{" "}
+                        Book {s.prompt_book_number} •{" "}
                         <span className={taskColor(s.prompt_task_type)}>{taskLabel(s.prompt_task_type)}</span>
                         {" "}• Test {s.prompt_test_number}
                       </p>
