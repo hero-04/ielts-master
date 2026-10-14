@@ -7,7 +7,7 @@ class ReadingTest(models.Model):
     passage_a_title = models.CharField(max_length=255, blank=True, default='')
     passage_b_title = models.CharField(max_length=255, blank=True, default='')
     passage_c_title = models.CharField(max_length=255, blank=True, default='')
-    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     passage_a = models.TextField(verbose_name='Passage 1')
     passage_b = models.TextField(verbose_name='Passage 2')

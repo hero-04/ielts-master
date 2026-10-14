@@ -8,7 +8,7 @@ class WritingPrompt(models.Model):
         TASK_1 = 'task_1', 'Task 1'
         TASK_2 = 'task_2', 'Task 2'
 
-    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     task_type = models.CharField(max_length=10, choices=TaskType.choices)
     prompt_text = models.TextField()

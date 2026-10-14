@@ -4,6 +4,7 @@ from . import views
 app_name = 'writing'
 
 urlpatterns = [
+    path('books/', views.WritingBookListView.as_view(), name='book-list'),
     path('prompts/', views.WritingPromptListView.as_view(), name='prompt-list'),
     path('prompts/<int:pk>/', views.WritingPromptDetailView.as_view(), name='prompt-detail'),
     path('submissions/', views.WritingSubmissionListCreateView.as_view(), name='submission-list-create'),

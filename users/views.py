@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -77,6 +78,11 @@ class RegisterView(generics.CreateAPIView):
     throttle_scope = 'register'
 
     def create(self, request, *args, **kwargs):
+        if not settings.REGISTRATION_OPEN:
+            return Response(
+                {'detail': 'Registration is currently closed. Please contact the administrator for an account.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -100,6 +106,17 @@ class RegisterView(generics.CreateAPIView):
 # ─────────────────────────────────────────────────────────────────────────────
 # Profile
 # ─────────────────────────────────────────────────────────────────────────────
+
+class AuthConfigView(APIView):
+    """
+    GET /api/auth/config/
+    Public. Tells the frontend which auth features are enabled.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        return Response({'registration_open': settings.REGISTRATION_OPEN})
+
 
 class MeView(APIView):
     """

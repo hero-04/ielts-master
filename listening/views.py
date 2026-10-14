@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -135,3 +136,20 @@ class ListeningAttemptListView(generics.ListAPIView):
             .select_related('test')
             .order_by('-completed_at')
         )
+
+
+class ListeningBookListView(APIView):
+    """
+    GET /api/listening/books/
+    Public. Distinct book numbers that have content, with counts — drives the module menu.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        qs = ListeningTest.objects.all()
+        rows = (
+            qs.values('book_number')
+            .annotate(count=Count('id'))
+            .order_by('book_number')
+        )
+        return Response([{'book_number': r['book_number'], 'count': r['count']} for r in rows])

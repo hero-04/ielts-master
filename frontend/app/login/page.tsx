@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, AlertCircle } from "lucide-react";
@@ -14,6 +14,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
+  // Public sign-up can be switched off on the server (REGISTRATION_OPEN); hide the link when it is.
+  const [registrationOpen, setRegistrationOpen] = useState(true);
+
+  useEffect(() => {
+    api.get("/auth/config/")
+      .then((res) => setRegistrationOpen(Boolean(res.data?.registration_open)))
+      .catch(() => { /* keep the link visible if the config call fails */ });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,12 +121,14 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
-            <Link href="/register" className="font-medium text-primary hover:text-primary-dark">
-              Sign up
-            </Link>
-          </div>
+          {registrationOpen && (
+            <div className="mt-6 text-center text-sm">
+              <span className="text-gray-600">Don&apos;t have an account? </span>
+              <Link href="/register" className="font-medium text-primary hover:text-primary-dark">
+                Sign up
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 

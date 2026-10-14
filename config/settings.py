@@ -19,16 +19,38 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-d213-+!i*a%a5g0dv4(k=@c*szx^21qa&=f0t2wc409$_f)=%r'
-)
+def env_bool(name: str, default: bool) -> bool:
+    return os.environ.get(name, str(default)).strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def env_list(name: str, default: str = '') -> list[str]:
+    return [v.strip() for v in os.environ.get(name, default).split(',') if v.strip()]
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# Defaults to False — set DEBUG=True in your local .env.
+DEBUG = env_bool('DEBUG', False)
 
-ALLOWED_HOSTS = ['*']
+# SECURITY WARNING: keep the secret key used in production secret!
+# In production (DEBUG=False) a real SECRET_KEY is required; the insecure
+# fallback is only ever used for local development.
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-local-dev-only-do-not-use-in-production'
+    else:
+        raise RuntimeError('SECRET_KEY environment variable must be set when DEBUG=False.')
+
+# Comma-separated, e.g. "ielts-master-zxlv.onrender.com,api.example.com".
+# Render also injects RENDER_EXTERNAL_HOSTNAME automatically.
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# Feature switches
+# Public sign-up. Keep False while the platform is private; flip to True to open it.
+REGISTRATION_OPEN = env_bool('REGISTRATION_OPEN', False)
 
 
 # Application definition
@@ -58,6 +80,7 @@ INSTALLED_APPS = [
     'writing',
     'speaking',
     'payments',
+    'content',   # import_content / export_content management commands
 ]
 
 MIDDLEWARE = [
@@ -106,7 +129,14 @@ DATABASES = {
 import dj_database_url
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    DATABASES['default'] = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    # Neon (and Render Postgres) require TLS. conn_max_age keeps connections
+    # warm; Neon's pooled endpoint handles the rest.
+    DATABASES['default'] = dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+        ssl_require=not DEBUG,
+    )
 
 
 # ─────────────────────────────────────────────
@@ -173,10 +203,33 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
 ]
-FRONTEND_URL = os.environ.get('FRONTEND_URL', '')
-if FRONTEND_URL:
-    CORS_ALLOWED_ORIGINS = [*CORS_ALLOWED_ORIGINS, FRONTEND_URL]
+# Comma-separated list of production frontend origins, e.g.
+# "https://ielts-master-red.vercel.app,https://ielts.example.uz"
+for origin in env_list('FRONTEND_URL'):
+    if origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(origin)
 CORS_ALLOW_CREDENTIALS = True
+
+# Needed for the Django admin to accept POSTs over HTTPS behind Render's proxy.
+CSRF_TRUSTED_ORIGINS = [f'https://{h}' for h in ALLOWED_HOSTS if h not in ('localhost', '127.0.0.1')]
+
+
+# ─────────────────────────────────────────────
+# Production security (active when DEBUG=False)
+# ─────────────────────────────────────────────
+
+if not DEBUG:
+    # Render / Cloudflare terminate TLS and forward X-Forwarded-Proto.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30  # 30 days; raise once you're confident
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
 
 
 # Password validation

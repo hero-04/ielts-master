@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 class ListeningTest(models.Model):
     title = models.CharField(max_length=255)
-    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)])
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)])
     test_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     audio_url = models.URLField(max_length=500, verbose_name='Audio URL')
     transcript = models.TextField(blank=True, null=True, verbose_name='Transcript')

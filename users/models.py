@@ -97,12 +97,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     # ── Convenience properties ────────────────────────────────────
     @property
     def is_premium(self):
-        """True if user has an active premium subscription."""
-        if self.user_type in (self.UserType.PREMIUM, self.UserType.SUPER_ADMIN):
+        """True if user has an active premium subscription.
+
+        Super admins are always premium. Everyone else needs a subscription_end_date
+        in the future — a user_type of 'premium' alone is not enough, otherwise an
+        expired subscriber would keep access forever.
+        """
+        if self.user_type == self.UserType.SUPER_ADMIN:
             return True
-        if self.subscription_end_date and self.subscription_end_date > timezone.now():
-            return True
-        return False
+        return bool(self.subscription_end_date and self.subscription_end_date > timezone.now())
 
     @property
     def is_center_admin(self):

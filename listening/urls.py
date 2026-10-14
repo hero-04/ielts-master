@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    ListeningBookListView,
     ListeningTestListView,
     ListeningTestDetailView,
     ListeningTestSubmitView,
@@ -10,6 +11,7 @@ from .views import (
 app_name = 'listening'
 
 urlpatterns = [
+    path('books/', ListeningBookListView.as_view(), name='book-list'),
     path('tests/', ListeningTestListView.as_view(), name='test-list'),
     path('tests/<int:pk>/', ListeningTestDetailView.as_view(), name='test-detail'),
     path('tests/<int:pk>/submit/', ListeningTestSubmitView.as_view(), name='test-submit'),

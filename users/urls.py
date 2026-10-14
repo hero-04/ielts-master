@@ -5,12 +5,16 @@ from .views import (
     LogoutView,
     RegisterView,
     MeView,
+    AuthConfigView,
     ChangePasswordView,
 )
 
 app_name = 'users'
 
 urlpatterns = [
+    # Public config
+    path('config/', AuthConfigView.as_view(), name='config'),
+
     # Registration & login
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),

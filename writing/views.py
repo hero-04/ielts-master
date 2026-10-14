@@ -1,4 +1,7 @@
+from django.db.models import Count
 from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import WritingPrompt, WritingSubmission
 from .serializers import (
@@ -46,3 +49,23 @@ class WritingSubmissionDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return WritingSubmission.objects.filter(user=self.request.user)
+
+
+class WritingBookListView(APIView):
+    """
+    GET /api/writing/books/?task_type=task_1
+    Public. Distinct book numbers that have content, with counts — drives the module menu.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        qs = WritingPrompt.objects.all()
+        task_type = request.query_params.get('task_type')
+        if task_type:
+            qs = qs.filter(task_type=task_type)
+        rows = (
+            qs.values('book_number')
+            .annotate(count=Count('id'))
+            .order_by('book_number')
+        )
+        return Response([{'book_number': r['book_number'], 'count': r['count']} for r in rows])

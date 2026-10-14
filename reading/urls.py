@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    ReadingBookListView,
     ReadingTestListView,
     ReadingTestDetailView,
     ReadingTestSubmitView,
@@ -10,6 +11,7 @@ from .views import (
 app_name = 'reading'
 
 urlpatterns = [
+    path('books/', ReadingBookListView.as_view(), name='book-list'),
     path('tests/', ReadingTestListView.as_view(), name='test-list'),
     path('tests/<int:pk>/', ReadingTestDetailView.as_view(), name='test-detail'),
     path('tests/<int:pk>/submit/', ReadingTestSubmitView.as_view(), name='test-submit'),

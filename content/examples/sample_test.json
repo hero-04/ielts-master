@@ -1,0 +1,62 @@
+{
+  "_comment": "Minimal example of every module. Original placeholder content — replace with your own tests. See content/README.md.",
+  "reading": [
+    {
+      "book_number": 10,
+      "test_number": 1,
+      "title": "Book 10 — Reading Test 1",
+      "passages": {
+        "A": {"title": "The Village Well", "text": "Paragraph A. For generations the well in the centre of the village was the only source of clean water.\n\nParagraph B. In 1998 a pipeline was built, and within five years most households had taps.\n\nParagraph C. The well is now used mainly for festivals, though older residents still prefer its taste."},
+        "B": {"title": "Learning to Listen", "text": "Passage 2 text goes here. Separate paragraphs with a blank line."},
+        "C": {"title": "The Cost of Convenience", "text": "Passage 3 text goes here."}
+      },
+      "questions": [
+        {"order": 1, "passage": "A", "type": "tfng", "text": "The well was the village's only water source before 1998.", "answer": "True", "explanation": "Paragraph A says it was 'the only source of clean water'."},
+        {"order": 2, "passage": "A", "type": "tfng", "text": "The pipeline was finished in a single year.", "answer": "Not Given"},
+        {"order": 3, "passage": "A", "type": "multiple_choice", "text": "Why do older residents still use the well?", "options": ["It is closer to their homes", "They prefer how the water tastes", "The taps are often broken", "It is cheaper"], "answer": "B"},
+        {"order": 4, "passage": "A", "type": "matching_headings", "text": "Paragraph A", "options": ["i. A new way to get water", "ii. The well's traditional role", "iii. Changing habits"], "answer": "ii"},
+        {"order": 5, "passage": "A", "type": "sentence_completion", "text": "Within five years most households had ________.", "answer": "taps"},
+        {"order": 6, "passage": "A", "type": "short_answer", "text": "In which year was the pipeline built? (A NUMBER ONLY)", "answer": "1998"},
+        {"order": 7, "passage": "B", "type": "multiple_choice_multiple", "text": "Which TWO points does the writer make? Choose TWO letters.", "options": ["Point one", "Point two", "Point three", "Point four", "Point five"], "answer": "A,C"},
+        {"order": 8, "passage": "C", "type": "table_completion", "text": "Water sources\nBefore 1998: the 8 ........\nAfter 1998: household 9 ........", "answers": {"8": "well", "9": "taps"}}
+      ]
+    }
+  ],
+  "listening": [
+    {
+      "book_number": 10,
+      "test_number": 1,
+      "title": "Book 10 — Listening Test 1",
+      "audio_url": "https://example.com/audio/book10-test1.mp3",
+      "transcript": "Optional full transcript shown after the test.",
+      "questions": [
+        {"order": 1, "section": 1, "type": "form_completion", "text": "Booking form\nName: Anna 1 ........\nPhone: 2 ........", "answers": {"1": "Petrova", "2": "0771 234 567"}},
+        {"order": 3, "section": 2, "type": "multiple_choice", "text": "The tour starts at", "options": ["9 am", "10 am", "11 am"], "answer": "B"},
+        {"order": 4, "section": 3, "type": "matching", "group": "speakers", "text": "Tom", "options": ["A. agrees", "B. disagrees", "C. is unsure"], "answer": "A"},
+        {"order": 5, "section": 3, "type": "matching", "group": "speakers", "text": "Lena", "options": ["A. agrees", "B. disagrees", "C. is unsure"], "answer": "C"},
+        {"order": 6, "section": 4, "type": "drag_drop", "text": "Rainfall is measured in ___ .", "options": ["millimetres", "litres", "hours"], "answer": "millimetres"}
+      ]
+    }
+  ],
+  "writing": [
+    {"book_number": 10, "test_number": 1, "task_type": "task_1", "prompt_text": "The chart below shows the share of households with internet access in three countries between 2010 and 2020. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.", "prompt_image": "https://example.com/images/book10-test1-task1.png", "sample_answer": "The chart compares …"},
+    {"book_number": 10, "test_number": 1, "task_type": "task_2", "prompt_text": "Some people believe that children should learn a musical instrument at school. Others think this time is better spent on core subjects. Discuss both views and give your own opinion.", "sample_answer": "It is often argued that …"}
+  ],
+  "speaking": [
+    {
+      "book_number": 10,
+      "test_number": 1,
+      "part1": [
+        {"question": "Do you live in a house or a flat?", "sample_answer": "I live in a flat on the fourth floor of a fairly modern block …"},
+        {"question": "What do you like about the area you live in?", "sample_answer": "The thing I appreciate most is …"}
+      ],
+      "part2": {"question": "Describe a skill you learned from an older relative.\n\nYou should say:\n• what the skill is\n• who taught you\n• how you learned it\nand explain why it is useful to you.", "sample_answer": "The skill I'd like to talk about is …"},
+      "part3": [
+        {"question": "Why do some traditional skills disappear?", "sample_answer": "I think the main reason is …"}
+      ]
+    }
+  ],
+  "vocabulary": [
+    {"word": "sustainable", "definition": "Able to continue over a long period without damaging the environment.", "example_sentence": "The village switched to a more sustainable water supply.", "topic": "environment", "difficulty": "medium", "book_number": 10}
+  ]
+}

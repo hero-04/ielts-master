@@ -1,0 +1,43 @@
+name: Nightly database backup
+
+# Dumps the production Postgres (Neon) every night and keeps the dump as a
+# workflow artifact for 30 days. Also runnable by hand from the Actions tab.
+#
+# Setup (once): GitHub repo → Settings → Secrets and variables → Actions →
+# New repository secret → name DATABASE_URL, value = your Neon connection string.
+
+on:
+  schedule:
+    - cron: '17 22 * * *'   # 22:17 UTC = 03:17 Tashkent, daily
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install PostgreSQL 17 client (matches Neon's server version)
+        run: |
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Dump database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then echo "DATABASE_URL secret is not set"; exit 1; fi
+          STAMP=$(date -u +%Y-%m-%d_%H%M)
+          # Neon's pooled endpoint (…-pooler…) does not support pg_dump; use the direct host.
+          DIRECT_URL="${DATABASE_URL/-pooler/}"
+          pg_dump "$DIRECT_URL" --no-owner --no-privileges --format=custom --file="ielts_master_${STAMP}.dump"
+          ls -lh *.dump
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.STAMP }}
+          path: '*.dump'
+          retention-days: 30
+          if-no-files-found: error

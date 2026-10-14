@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import generics, permissions, status
@@ -93,3 +94,20 @@ class ReviewWordSubmitView(APIView):
             'next_review_date': progress.next_review_date,
             'review_count': progress.review_count
         }, status=status.HTTP_200_OK)
+
+
+class VocabularyBookListView(APIView):
+    """
+    GET /api/vocabulary/books/
+    Public. Distinct book numbers that have content, with counts — drives the module menu.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        qs = VocabularyWord.objects.all()
+        rows = (
+            qs.values('book_number')
+            .annotate(count=Count('id'))
+            .order_by('book_number')
+        )
+        return Response([{'book_number': r['book_number'], 'count': r['count']} for r in rows])

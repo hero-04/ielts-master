@@ -25,7 +25,7 @@ class VocabularyWord(models.Model):
     example_sentence = models.TextField()
     topic = models.CharField(max_length=50, choices=Topic.choices)
     difficulty = models.CharField(max_length=20, choices=Difficulty.choices, default=Difficulty.MEDIUM)
-    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(19)], db_index=True)
+    book_number = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)], db_index=True)
     audio_url = models.URLField(max_length=500, blank=True, null=True, verbose_name='Audio Pronunciation')
     
     created_at = models.DateTimeField(auto_now_add=True)
