@@ -8,6 +8,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from django.urls import reverse_lazy
+from django.templatetags.static import static
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -276,6 +277,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
@@ -309,6 +311,7 @@ UNFOLD = {
     'SHOW_VIEW_ON_SITE': False,
     'DASHBOARD_CALLBACK': 'config.admin_dashboard.dashboard_callback',
     'BORDER_RADIUS': '10px',
+    'STYLES': [lambda request: static('admin/ielts-admin.css')],
     # Brand blue (#00508F) as the primary scale
     'COLORS': {
         'primary': {

@@ -1,0 +1,55 @@
+/*
+  IELTS Master — admin theme overrides (loaded via UNFOLD["STYLES"]).
+
+  1. Warm light mode. Unfold's default light palette is a cold blue-grey;
+     these values are a cream/stone scale that is easier on the eyes over
+     long editing sessions. Dark mode is untouched (rule is scoped to
+     :root:not(.dark)) so it keeps the slate look.
+  2. Stat-card icon badge used on the dashboard (templates/admin/index.html).
+*/
+
+:root:not(.dark) {
+  --color-white:    #fffdf8;   /* cards, sidebar */
+  --color-base-50:  #faf7ef;   /* page background */
+  --color-base-100: #f3eee2;   /* hover rows, inset panels */
+  --color-base-200: #e7dfcd;   /* borders */
+  --color-base-300: #d3c9b2;
+  --color-base-400: #a3987f;   /* muted text / icons */
+  --color-base-500: #7a7059;   /* subtle text */
+  --color-base-600: #5a5243;   /* default text */
+  --color-base-700: #443e34;
+  --color-base-800: #2d2923;
+  --color-base-900: #1e1b17;   /* headings */
+  --color-base-950: #14120e;
+}
+
+/* Dashboard stat-card icon badge */
+.im-stat {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.im-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+}
+.im-stat-icon .material-symbols-outlined {
+  font-size: 28px;
+  line-height: 1;
+}
+.dark .im-stat-icon {
+  background: color-mix(in oklab, var(--color-primary-600) 22%, transparent);
+  color: var(--color-primary-300);
+}
+.im-stat-label { font-size: 0.875rem; color: var(--color-base-500); }
+.dark .im-stat-label { color: var(--color-base-400); }
+.im-stat-value { font-size: 1.875rem; font-weight: 600; line-height: 1.2; color: var(--color-base-900); }
+.dark .im-stat-value { color: var(--color-base-100); }
+.im-stat-sub { font-size: 0.75rem; margin-top: 0.25rem; color: var(--color-base-400); }

@@ -19,13 +19,11 @@
             {% for s in content_stats %}
                 {% url s.url as link %}
                 {% component "unfold/components/card.html" with href=link %}
-                    <div class="flex items-start gap-4">
-                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/40 dark:text-primary-300">
-                            <span class="material-symbols-outlined" style="font-size:22px">{{ s.icon }}</span>
-                        </span>
-                        <div class="min-w-0">
-                            <div class="text-sm text-base-500 dark:text-base-400">{{ s.label }}</div>
-                            <div class="text-3xl font-semibold leading-tight text-font-important-light dark:text-font-important-dark">{{ s.value }}</div>
+                    <div class="im-stat">
+                        <span class="im-stat-icon"><span class="material-symbols-outlined">{{ s.icon }}</span></span>
+                        <div>
+                            <div class="im-stat-label">{{ s.label }}</div>
+                            <div class="im-stat-value">{{ s.value }}</div>
                         </div>
                     </div>
                 {% endcomponent %}
@@ -41,14 +39,12 @@
             {% for s in student_stats %}
                 {% url s.url as link %}
                 {% component "unfold/components/card.html" with href=link %}
-                    <div class="flex items-start gap-4">
-                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/40 dark:text-primary-300">
-                            <span class="material-symbols-outlined" style="font-size:22px">{{ s.icon }}</span>
-                        </span>
-                        <div class="min-w-0">
-                            <div class="text-sm text-base-500 dark:text-base-400">{{ s.label }}</div>
-                            <div class="text-3xl font-semibold leading-tight text-font-important-light dark:text-font-important-dark">{{ s.value }}</div>
-                            {% if s.sub %}<div class="text-xs text-base-400 mt-1">{{ s.sub }}</div>{% endif %}
+                    <div class="im-stat">
+                        <span class="im-stat-icon"><span class="material-symbols-outlined">{{ s.icon }}</span></span>
+                        <div>
+                            <div class="im-stat-label">{{ s.label }}</div>
+                            <div class="im-stat-value">{{ s.value }}</div>
+                            {% if s.sub %}<div class="im-stat-sub">{{ s.sub }}</div>{% endif %}
                         </div>
                     </div>
                 {% endcomponent %}
