@@ -18,9 +18,16 @@
         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-10">
             {% for s in content_stats %}
                 {% url s.url as link %}
-                {% component "unfold/components/card.html" with href=link icon=s.icon %}
-                    <div class="text-sm text-base-500 dark:text-base-400">{{ s.label }}</div>
-                    <div class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark mt-1">{{ s.value }}</div>
+                {% component "unfold/components/card.html" with href=link %}
+                    <div class="flex items-start gap-4">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/40 dark:text-primary-300">
+                            <span class="material-symbols-outlined" style="font-size:22px">{{ s.icon }}</span>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="text-sm text-base-500 dark:text-base-400">{{ s.label }}</div>
+                            <div class="text-3xl font-semibold leading-tight text-font-important-light dark:text-font-important-dark">{{ s.value }}</div>
+                        </div>
+                    </div>
                 {% endcomponent %}
             {% endfor %}
         </div>
@@ -33,10 +40,17 @@
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
             {% for s in student_stats %}
                 {% url s.url as link %}
-                {% component "unfold/components/card.html" with href=link icon=s.icon %}
-                    <div class="text-sm text-base-500 dark:text-base-400">{{ s.label }}</div>
-                    <div class="text-3xl font-semibold text-font-important-light dark:text-font-important-dark mt-1">{{ s.value }}</div>
-                    {% if s.sub %}<div class="text-xs text-base-400 mt-1">{{ s.sub }}</div>{% endif %}
+                {% component "unfold/components/card.html" with href=link %}
+                    <div class="flex items-start gap-4">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/40 dark:text-primary-300">
+                            <span class="material-symbols-outlined" style="font-size:22px">{{ s.icon }}</span>
+                        </span>
+                        <div class="min-w-0">
+                            <div class="text-sm text-base-500 dark:text-base-400">{{ s.label }}</div>
+                            <div class="text-3xl font-semibold leading-tight text-font-important-light dark:text-font-important-dark">{{ s.value }}</div>
+                            {% if s.sub %}<div class="text-xs text-base-400 mt-1">{{ s.sub }}</div>{% endif %}
+                        </div>
+                    </div>
                 {% endcomponent %}
             {% endfor %}
         </div>
