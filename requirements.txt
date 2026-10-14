@@ -12,3 +12,4 @@ dj-database-url==2.3.0
 python-dotenv==1.0.1
 cloudinary
 django-cloudinary-storage
+django-unfold>=0.110,<1
