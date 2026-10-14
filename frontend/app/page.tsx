@@ -45,7 +45,7 @@ export default function LandingPage() {
               Master the <span className="text-primary">CD IELTS</span> with Realistic Practice
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mb-10 leading-relaxed">
-              Realistic reading, listening, writing and vocabulary practice — built by a real British Council IELTS invigilator.
+              Realistic reading, listening, writing and vocabulary practice for computer-delivered IELTS.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
               <Link href="/register" className="w-full sm:w-auto px-8 py-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors shadow-md flex items-center justify-center gap-2">
@@ -308,7 +308,6 @@ export default function LandingPage() {
               <BookOpen className="w-6 h-6 text-primary-light" />
               <span className="text-xl font-bold text-white">IELTS Master</span>
             </div>
-            <p className="text-sm leading-relaxed">Built by a British Council IELTS invigilator.</p>
           </div>
           <nav className="flex flex-wrap justify-center gap-x-8 gap-y-3">
             <Link href="#features" className="text-sm hover:text-white transition-colors">Features</Link>

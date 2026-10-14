@@ -152,17 +152,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area - White */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-8 flex-shrink-0">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100 capitalize">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0">
+          <h1 className="text-xl font-semibold text-gray-800 capitalize">
             {pathname.split("/")[1] || "Dashboard"}
           </h1>
           <div className="flex items-center gap-4">
-            <div className="bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-300 text-sm font-medium px-3 py-1 rounded-full">
+            <div className="bg-blue-50 text-primary text-sm font-medium px-3 py-1 rounded-full">
               {user?.user_type === "premium" ? "Premium Plan" : "Free Plan"}
             </div>
           </div>
         </header>
-        <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-8">
+        <div className="flex-1 overflow-auto bg-gray-50 p-8">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>
