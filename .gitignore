@@ -13,3 +13,4 @@ build/
 backups/
 .claude/
 staticfiles/
+Claude outputs/
