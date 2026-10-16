@@ -157,7 +157,7 @@ class Command(BaseCommand):
         WritingPrompt.objects.create(
             book_number=p['book_number'], test_number=p['test_number'], task_type=p['task_type'],
             prompt_text=p['prompt_text'], prompt_image=p.get('prompt_image') or None,
-            sample_answer=p['sample_answer'],
+            sample_answer=p.get('sample_answer') or '',
         )
         self.stdout.write(f'  ok    {label}')
         return True

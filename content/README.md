@@ -103,7 +103,9 @@ Mark the gap in `drag_drop` text with `___` or `[BLANK]`.
  "prompt_text": "…", "prompt_image": "https://…/chart.png", "sample_answer": "…"}
 ```
 
-`task_type` is `task_1` or `task_2`. `prompt_image` is an image URL (Task 1 charts); Task 2 leaves it out.
+`task_type` is `task_1` or `task_2`. `prompt_image` is an image URL (Task 1 charts); Task 2 leaves it out. `sample_answer` is optional (a warning is shown if missing).
+
+Keep files you must not publish in `content/private/` — that folder is git-ignored.
 
 ## Speaking test
 

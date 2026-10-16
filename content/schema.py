@@ -152,7 +152,9 @@ def validate_writing(prompts: list, rep: Report):
         where = f'writing[{i}]'
         if not isinstance(p, dict):
             rep.error(where, 'must be an object'); continue
-        _require(p, ('book_number', 'test_number', 'task_type', 'prompt_text', 'sample_answer'), where, rep)
+        _require(p, ('book_number', 'test_number', 'task_type', 'prompt_text'), where, rep)
+        if not p.get('sample_answer'):
+            rep.warn(where, 'no sample_answer — the "Sample answer" button will show nothing for this prompt')
         _check_book_test(p, where, rep)
         if p.get('task_type') not in WRITING_TASKS:
             rep.error(where, f'task_type must be one of {sorted(WRITING_TASKS)}')

@@ -14,3 +14,7 @@ backups/
 .claude/
 staticfiles/
 Claude outputs/
+
+# private test content (never commit)
+content/private/*
+!content/private/README.md

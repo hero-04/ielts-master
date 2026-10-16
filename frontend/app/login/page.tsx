@@ -14,13 +14,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
-  // Public sign-up can be switched off on the server (REGISTRATION_OPEN); hide the link when it is.
-  const [registrationOpen, setRegistrationOpen] = useState(true);
+  // Public sign-up can be switched off on the server (REGISTRATION_OPEN).
+  // Start hidden and only show the link once the server confirms it's open — avoids a flash.
+  const [registrationOpen, setRegistrationOpen] = useState(false);
 
   useEffect(() => {
     api.get("/auth/config/")
       .then((res) => setRegistrationOpen(Boolean(res.data?.registration_open)))
-      .catch(() => { /* keep the link visible if the config call fails */ });
+      .catch(() => { /* leave hidden if the config call fails */ });
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
