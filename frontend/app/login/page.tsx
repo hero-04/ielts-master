@@ -18,6 +18,14 @@ export default function LoginPage() {
   // Start hidden and only show the link once the server confirms it's open — avoids a flash.
   const [registrationOpen, setRegistrationOpen] = useState(false);
 
+  // Arriving here after a failed token refresh (?expired=1): show a note and clear any stale session.
+  const [expired] = useState(() =>
+    typeof window !== "undefined" && window.location.search.includes("expired=1")
+  );
+  useEffect(() => {
+    if (expired) useAuthStore.getState().logout();
+  }, [expired]);
+
   useEffect(() => {
     api.get("/auth/config/")
       .then((res) => setRegistrationOpen(Boolean(res.data?.registration_open)))
@@ -55,6 +63,20 @@ export default function LoginPage() {
           
           <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Welcome back</h2>
           <p className="text-gray-600 mb-8">Please enter your details to sign in.</p>
+
+          {expired && !error && (
+
+
+            <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3">
+
+
+              Your session expired. Please sign in again.
+
+
+            </div>
+
+
+          )}
 
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
