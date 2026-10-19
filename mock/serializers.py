@@ -83,7 +83,7 @@ class MockAnswerResultSerializer(serializers.ModelSerializer):
 
 class MockResultSerializer(serializers.ModelSerializer):
     mock_number = serializers.IntegerField(source='mock.number')
-    answers = MockAnswerResultSerializer(many=True, read_only=True)
+    answers = serializers.SerializerMethodField()
     sections = serializers.SerializerMethodField()
     overall_estimate = serializers.SerializerMethodField()
 
@@ -98,6 +98,22 @@ class MockResultSerializer(serializers.ModelSerializer):
 
     def get_sections(self, obj):
         return obj.mock.section_order()
+
+    def get_answers(self, obj):
+        """Every question of every submitted section — unanswered ones included as blank."""
+        given = {a.question_id: a for a in obj.answers.all()}
+        rows = []
+        for q in obj.mock.questions.all().order_by('section', 'order_number'):
+            if not obj.section_done(q.section):
+                continue
+            a = given.get(q.id)
+            rows.append({
+                'section': q.section, 'part': q.part, 'order_number': q.order_number,
+                'user_answer': a.user_answer if a else '',
+                'correct_answer': q.correct_answer,
+                'is_correct': bool(a and a.is_correct),
+            })
+        return rows
 
     def get_overall_estimate(self, obj):
         """Average of the objective bands (plus writing if a teacher marked it), rounded to the nearest 0.5."""

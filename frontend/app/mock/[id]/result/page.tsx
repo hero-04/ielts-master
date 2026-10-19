@@ -80,21 +80,47 @@ export default function MockResultPage() {
             </div>
           </div>
 
-          {(open === "listening" || open === "reading") && (
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-8">
-              <div className="px-6 py-3 border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 capitalize">{open} — answer key</div>
-              <div className="grid grid-cols-1 md:grid-cols-2">
-                {r.answers.filter((a) => a.section === open).sort((a, b) => a.order_number - b.order_number).map((a) => (
-                  <div key={a.order_number} className="flex items-center gap-3 px-6 py-2.5 border-b border-gray-100 text-sm">
-                    {a.is_correct ? <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" /> : <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
-                    <span className="w-8 font-mono text-gray-500">{a.order_number}</span>
-                    <span className={`flex-1 truncate ${a.is_correct ? "text-gray-900" : "text-red-600"}`}>{a.user_answer || <em className="text-gray-400">blank</em>}</span>
-                    {!a.is_correct && <span className="text-green-700 font-medium truncate">{a.correct_answer}</span>}
-                  </div>
-                ))}
+          {(open === "listening" || open === "reading") && (() => {
+            const rows = r.answers.filter((a) => a.section === open).sort((a, b) => a.order_number - b.order_number);
+            const half = Math.ceil(rows.length / 2);
+            const cols = [rows.slice(0, half), rows.slice(half)];
+            const fmt = (v: string) => v.split(",").map((x) => x.trim()).join(" / ");
+            return (
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-8">
+                <div className="px-6 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                  <span className="font-semibold text-gray-800 capitalize">{open} — answer key</span>
+                  <span className="text-sm text-gray-500">
+                    {rows.filter((a) => a.is_correct).length} / {rows.length} correct
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x divide-gray-100">
+                  {cols.map((col, ci) => (
+                    <div key={ci}>
+                      {col.map((a) => (
+                        <div key={a.order_number} className="flex items-center gap-3 px-6 py-2.5 border-b border-gray-100 text-sm">
+                          {a.is_correct
+                            ? <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                            : <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
+                          <span className="w-7 font-mono text-gray-500 shrink-0">{a.order_number}</span>
+                          <span className="flex items-center gap-2 min-w-0 flex-wrap">
+                            {a.user_answer
+                              ? <span className={a.is_correct ? "text-gray-900" : "text-red-600 line-through decoration-red-300"}>{a.user_answer}</span>
+                              : <em className="text-gray-400">no answer</em>}
+                            {!a.is_correct && (
+                              <>
+                                <span className="text-gray-400">→</span>
+                                <span className="text-green-700 font-medium">{fmt(a.correct_answer)}</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {open === "writing" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
