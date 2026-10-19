@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
-from .models import Mock, MockAttempt, MockAnswer, MockQuestion
+import re
+
+from .models import Mock, MockAttempt, MockAnswer, MockQuestion, MockQuestionGroup
 
 
 class MockQuestionSerializer(serializers.ModelSerializer):
@@ -12,13 +14,48 @@ class MockQuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MockQuestion
-        fields = ['id', 'part', 'passage', 'section', 'question_type', 'question_text', 'options', 'question_group', 'order_number']
+        fields = ['id', 'group', 'part', 'passage', 'section', 'question_type', 'question_text', 'options', 'question_group', 'order_number']
 
     def get_passage(self, obj):
         return obj.part if obj.section == MockQuestion.Section.READING else None
 
     def get_section(self, obj):
         return int(obj.part) if obj.section == MockQuestion.Section.LISTENING and obj.part.isdigit() else None
+
+
+_SCRIPT_RE = re.compile(r'<\s*(script|iframe|object|embed)[^>]*>.*?<\s*/\s*\1\s*>', re.I | re.S)
+_ON_ATTR_RE = re.compile(r"""\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)""", re.I)
+
+
+def safe_html(html: str) -> str:
+    """Blocks are written by admins, but strip anything executable anyway."""
+    html = _SCRIPT_RE.sub('', html or '')
+    html = _ON_ATTR_RE.sub('', html)
+    return re.sub(r'javascript:', '', html, flags=re.I)
+
+
+class MockGroupSerializer(serializers.ModelSerializer):
+    """A question block as shown in the exam — the answer key never leaves the server."""
+    content = serializers.SerializerMethodField()
+    word_bank = serializers.SerializerMethodField()
+    passage = serializers.SerializerMethodField()
+    section_number = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MockQuestionGroup
+        fields = ['id', 'part', 'passage', 'section_number', 'order', 'title', 'instructions', 'content', 'word_bank']
+
+    def get_content(self, obj):
+        return safe_html(obj.content)
+
+    def get_word_bank(self, obj):
+        return obj.bank_options()
+
+    def get_passage(self, obj):
+        return obj.part if obj.section == 'reading' else None
+
+    def get_section_number(self, obj):
+        return int(obj.part) if obj.section == 'listening' and obj.part.isdigit() else None
 
 
 class AnswerInSerializer(serializers.Serializer):

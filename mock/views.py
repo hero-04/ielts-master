@@ -24,7 +24,7 @@ from listening.views import calculate_listening_band
 from reading.views import calculate_reading_band
 from .models import Mock, MockAttempt, MockAnswer, MockQuestion
 from .serializers import (
-    MockListSerializer, MockQuestionSerializer, MockResultSerializer,
+    MockGroupSerializer, MockListSerializer, MockQuestionSerializer, MockResultSerializer,
     ObjectiveSubmitSerializer, WritingSubmitSerializer, attempt_status,
 )
 
@@ -126,6 +126,7 @@ class MockSectionView(APIView):
             payload.update({
                 'audio_url': mock.listening_audio_url,
                 'questions': MockQuestionSerializer(qs, many=True).data,
+                'groups': MockGroupSerializer(mock.groups.filter(section='listening'), many=True).data,
             })
         elif section == 'reading':
             qs = mock.questions.filter(section=MockQuestion.Section.READING)
@@ -134,6 +135,7 @@ class MockSectionView(APIView):
                 'passage_b_title': mock.passage_b_title, 'passage_b': mock.passage_b,
                 'passage_c_title': mock.passage_c_title, 'passage_c': mock.passage_c,
                 'questions': MockQuestionSerializer(qs, many=True).data,
+                'groups': MockGroupSerializer(mock.groups.filter(section='reading'), many=True).data,
             })
         else:
             payload.update({

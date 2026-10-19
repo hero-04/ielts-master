@@ -5,7 +5,7 @@ from unfold.admin import ModelAdmin, StackedInline, TabularInline
 from unfold.decorators import action, display
 from unfold.contrib.filters.admin import RelatedDropdownFilter, ChoicesDropdownFilter
 
-from .models import Mock, MockQuestion, MockAttempt, MockAnswer
+from .models import Mock, MockQuestion, MockQuestionGroup, MockAttempt, MockAnswer
 
 
 class MockQuestionInline(StackedInline):
@@ -17,13 +17,31 @@ class MockQuestionInline(StackedInline):
     tab = True
 
 
+class MockQuestionGroupInline(StackedInline):
+    model = MockQuestionGroup
+    extra = 0
+    ordering = ('section', 'part', 'order')
+    fields = (('section', 'part', 'order'), 'title', 'instructions', 'content', ('word_bank', 'answer_key'))
+    formfield_overrides = {models.TextField: {'widget': forms.Textarea(attrs={'rows': 6, 'style': 'font-family: ui-monospace, monospace; font-size: 13px'})}}
+    tab = True
+    verbose_name = 'Question block (HTML with [[N]] gaps)'
+    verbose_name_plural = 'Question blocks'
+
+
 @admin.register(Mock)
 class MockAdmin(ModelAdmin):
     list_display = ('__str__', 'title', 'is_active', 'sections_badge', 'question_count', 'attempt_count', 'created_at')
     list_filter = ('is_active',)
     search_fields = ('title',)
     ordering = ('number',)
-    inlines = [MockQuestionInline]
+    inlines = [MockQuestionGroupInline, MockQuestionInline]
+
+    def save_formset(self, request, form, formset, change):
+        super().save_formset(request, form, formset, change)
+        if formset.model is MockQuestionGroup:
+            for g in formset.instance.groups.all():
+                g.sync_questions()
+
     fieldsets = (
         (None, {'fields': (('number', 'is_active'), 'title')}),
         ('Listening', {'classes': ['tab'], 'fields': ('listening_audio_url', 'listening_transcript')}),
@@ -44,6 +62,23 @@ class MockAdmin(ModelAdmin):
     @display(description='Attempts')
     def attempt_count(self, obj):
         return obj.attempts.count()
+
+
+@admin.register(MockQuestionGroup)
+class MockQuestionGroupAdmin(ModelAdmin):
+    list_display = ('__str__', 'section', 'part', 'title', 'gap_count')
+    list_filter = (('mock', RelatedDropdownFilter), 'section')
+    list_filter_submit = True
+    fields = ('mock', ('section', 'part', 'order'), 'title', 'instructions', 'content', ('word_bank', 'answer_key'))
+    formfield_overrides = {models.TextField: {'widget': forms.Textarea(attrs={'rows': 12, 'style': 'font-family: ui-monospace, monospace; font-size: 13px'})}}
+
+    @display(description='Gaps')
+    def gap_count(self, obj):
+        return len(obj.gap_numbers())
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        obj.sync_questions()
 
 
 @admin.register(MockQuestion)

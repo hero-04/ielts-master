@@ -342,6 +342,7 @@ UNFOLD = {
                     {'title': 'Speaking tests', 'icon': 'mic', 'link': reverse_lazy('admin:speaking_speakingtest_changelist')},
                     {'title': 'Vocabulary', 'icon': 'dictionary', 'link': reverse_lazy('admin:vocabulary_vocabularyword_changelist')},
                     {'title': 'Mock tests', 'icon': 'assignment', 'link': reverse_lazy('admin:mock_mock_changelist')},
+                    {'title': 'Mock question blocks', 'icon': 'view_quilt', 'link': reverse_lazy('admin:mock_mockquestiongroup_changelist')},
                 ],
             },
             {

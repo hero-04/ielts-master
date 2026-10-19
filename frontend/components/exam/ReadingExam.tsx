@@ -6,6 +6,7 @@ import { Clock, ChevronLeft, ChevronRight, Settings, HelpCircle, CheckSquare, Hi
 import Link from "next/link";
 import { api } from "@/lib/api";
 import type { ExamSource } from "./types";
+import QuestionBlock, { type QuestionBlockData } from "./QuestionBlock";
 
 interface ReadingQuestion {
   id: number;
@@ -15,6 +16,7 @@ interface ReadingQuestion {
   correct_answer: string;
   order_number: number;
   options?: string[];
+  group?: number | null;
 }
 
 interface ReadingTest {
@@ -28,6 +30,7 @@ interface ReadingTest {
   passage_b: string;
   passage_c: string;
   questions: ReadingQuestion[];
+  groups?: QuestionBlockData[];
 }
 
 export default function ReadingExam({ source }: { source: ExamSource }) {
@@ -779,6 +782,27 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
               );
             })()}
             {passageQuestions.map((question) => {
+              if (question.group) {
+                const block = test.groups?.find(g => g.id === question.group);
+                const first = passageQuestions.find(q => q.group === question.group);
+                if (!block || first?.id !== question.id) return null;
+                const blockQs = passageQuestions.filter(q => q.group === question.group);
+                return (
+                  <div key={`block-${block.id}`} ref={el => { blockQs.forEach(q => { questionRefs.current[q.id] = el; }); }}
+                    className={`p-4 rounded-xl border transition-all ${
+                      blockQs.some(q => q.order_number === focusedOrderNumber) ? 'bg-blue-50 border-l-4 border-primary' : 'bg-blue-50/30 border-blue-100'
+                    }`}>
+                    <QuestionBlock
+                      block={block}
+                      questionIdFor={(n) => blockQs.find(q => q.order_number === n)?.id}
+                      answers={answers}
+                      setAnswer={(qid, v) => handleAnswerChange(qid, v)}
+                      focusedNumber={focusedOrderNumber}
+                      onFocusNumber={(n) => setFocusedOrderNumber(n)}
+                    />
+                  </div>
+                );
+              }
               if (question.question_type === 'matching_headings') {
                 if (question.id !== headingQs[0]?.id) return null;
                 return (

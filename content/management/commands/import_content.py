@@ -24,7 +24,7 @@ from listening.models import ListeningTest, ListeningQuestion
 from writing.models import WritingPrompt
 from speaking.models import SpeakingTest, SpeakingQuestion
 from vocabulary.models import VocabularyWord
-from mock.models import Mock, MockQuestion
+from mock.models import Mock, MockQuestion, MockQuestionGroup
 
 
 class Command(BaseCommand):
@@ -221,6 +221,24 @@ class Command(BaseCommand):
                     question_group=r.get('group', ''), order_number=r['order'],
                 ))
         MockQuestion.objects.bulk_create(rows)
+        nblocks = 0
+        for sec, data in (('listening', L), ('reading', R)):
+            for b in data.get('blocks') or []:
+                ak = b.get('answer_key') or '\n'.join(f'{k} = {v}' for k, v in (b.get('answers') or {}).items())
+                wb = b.get('word_bank') or ''
+                if isinstance(wb, list):
+                    wb = '\n'.join(wb)
+                g = MockQuestionGroup(
+                    mock=mock, section=sec, part=str(b['part']), order=b.get('order') or 1,
+                    title=b.get('title', ''), instructions=b.get('instructions', ''),
+                    content=b['content'], word_bank=wb, answer_key=ak,
+                )
+                g.full_clean(exclude=['mock'])
+                g.save()
+                g.sync_questions()
+                nblocks += 1
+        if nblocks:
+            self.stdout.write(f'  ok    {label}: {nblocks} question block(s)')
         self.stdout.write(f'  ok    {label}: sections {", ".join(mock.section_order()) or "none"}, {len(rows)} questions')
         return True
 

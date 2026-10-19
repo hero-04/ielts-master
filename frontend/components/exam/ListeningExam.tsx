@@ -4,6 +4,7 @@ import { Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useVolume } from "@/lib/volume";
 import type { ExamSource } from "./types";
+import QuestionBlock, { type QuestionBlockData } from "./QuestionBlock";
 import { Clock, Headphones, CheckSquare, Play } from "lucide-react";
 import Link from "next/link";
 
@@ -16,6 +17,7 @@ interface ListeningQuestion {
   options?: string[];
   order_number: number;
   question_group?: string;
+  group?: number | null;
 }
 
 interface ListeningTest {
@@ -26,6 +28,7 @@ interface ListeningTest {
   audio_url: string;
   transcript: string;
   questions: ListeningQuestion[];
+  groups?: (QuestionBlockData & { section_number: number | null })[];
 }
 
 export default function ListeningExam({ source }: { source: ExamSource }) {
@@ -496,10 +499,21 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
                   </h3>
                   <div className="space-y-6 mb-8">
                     {(() => {
-                      const grouped: Array<ListeningQuestion | ListeningQuestion[]> = [];
+                      const grouped: Array<ListeningQuestion | ListeningQuestion[] | QuestionBlockData> = [];
+                      const seenBlocks = new Set<number>();
                       let i = 0;
                       while (i < qs.length) {
                         const q = qs[i];
+                        if (q.group) {
+                          // question block: render the whole block once, at its first question
+                          if (!seenBlocks.has(q.group)) {
+                            seenBlocks.add(q.group);
+                            const b = test.groups?.find(g => g.id === q.group);
+                            if (b) grouped.push(b);
+                          }
+                          i++;
+                          continue;
+                        }
                         if (q.question_type === 'matching' && q.question_group) {
                           const group: ListeningQuestion[] = [q];
                           let j = i + 1;
@@ -515,6 +529,18 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
                         }
                       }
                       return grouped.map((item) => {
+                        if (!Array.isArray(item) && 'content' in item) {
+                          return (
+                            <div key={`block-${item.id}`} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+                              <QuestionBlock
+                                block={item}
+                                questionIdFor={(n) => qs.find(x => x.order_number === n)?.id}
+                                answers={answers}
+                                setAnswer={(qid, v) => handleAnswerChange(qid, v)}
+                              />
+                            </div>
+                          );
+                        }
                         if (Array.isArray(item)) {
                           return (
                             <div key={`group-${item[0].question_group}-${item[0].id}`} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">

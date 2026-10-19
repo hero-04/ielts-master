@@ -240,6 +240,8 @@ def validate_mocks(mocks: list, rep: Report):
                         rep.error(qw, 'section must be 1, 2, 3 or 4')
                     _check_question_common(q, qw, MOCK_TYPES, rep)
                     orders.extend(_expanded_orders(q))
+                for k, b in enumerate(L.get('blocks') or []):
+                    orders.extend(_block_orders(b, f'{lw}.blocks[{k}]', rep, (1, 2, 3, 4), int_part=True))
                 _check_orders(orders, lw, rep, expected=40)
 
         R = m.get('reading')
@@ -260,6 +262,8 @@ def validate_mocks(mocks: list, rep: Report):
                         rep.error(qw, 'passage must be "A", "B" or "C"')
                     _check_question_common(q, qw, MOCK_TYPES, rep)
                     orders.extend(_expanded_orders(q))
+                for k, b in enumerate(R.get('blocks') or []):
+                    orders.extend(_block_orders(b, f'{rw}.blocks[{k}]', rep, ('A', 'B', 'C')))
                 _check_orders(orders, rw, rep, expected=40)
 
         W = m.get('writing')
@@ -274,6 +278,26 @@ def validate_mocks(mocks: list, rep: Report):
                         rep.error(ww, f'{task}.prompt_text is required')
                 if isinstance(W.get('task1'), dict) and not W['task1'].get('prompt_image'):
                     rep.warn(ww, 'task1 usually needs a prompt_image URL (chart / diagram)')
+
+
+def _block_orders(b: dict, where: str, rep: Report, parts, int_part=False) -> list[int]:
+    """A question block: HTML `content` with [[N]] gaps + `answers` {"N": "..."} (or `answer_key` text)."""
+    if not isinstance(b, dict) or not b.get('content'):
+        rep.error(where, 'a block needs "content" (HTML with [[N]] gaps)')
+        return []
+    if b.get('part') not in parts:
+        rep.error(where, f'part must be one of {list(parts)}')
+    gaps = sorted({int(n) for n in re.findall(r'\[\[(\d+)\]\]', b['content'])})
+    if not gaps:
+        rep.error(where, 'no [[N]] gaps found in content')
+    answers = b.get('answers')
+    if isinstance(answers, dict):
+        given = {int(k) for k in answers}
+        if set(gaps) != given:
+            rep.error(where, f'gaps {gaps} do not match answers {sorted(given)}')
+    elif not b.get('answer_key'):
+        rep.error(where, 'a block needs "answers" {"11": "sun"} or an "answer_key" text')
+    return gaps
 
 
 def _expanded_orders(q: dict) -> list[int]:
