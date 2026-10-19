@@ -41,7 +41,7 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
   const [timeLeft, setTimeLeft] = useState(40 * 60);
   // Exam mode (mock): the recording plays once; when it ends a short review period starts.
   const [reviewSeconds, setReviewSeconds] = useState(2 * 60);
-  const [phase, setPhase] = useState<'ready' | 'blocked' | 'playing' | 'review'>('ready');
+  const [phase, setPhase] = useState<'ready' | 'blocked' | 'failed' | 'playing' | 'review'>('ready');
   const [activePart, setActivePart] = useState(1);
   const [focusedNumber, setFocusedNumber] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -145,7 +145,10 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
   const startRecording = () => {
     const el = audioRef.current;
     if (!el) return;
-    el.play().then(() => setPhase('playing')).catch(() => setPhase('blocked'));
+    el.play().then(() => setPhase('playing')).catch((err: DOMException) => {
+      // NotAllowedError = the browser wants one click before sound; anything else = the file did not load
+      setPhase(err?.name === 'NotAllowedError' ? 'blocked' : 'failed');
+    });
   };
 
   // Exam mode: the recording starts by itself as soon as the section opens (the student already
@@ -572,6 +575,7 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
     : phase === 'playing' ? 'Audio is playing'
     : phase === 'review' ? `Review time ${formatTime(reviewSeconds)}`
     : phase === 'blocked' ? 'Audio waiting to start'
+    : phase === 'failed' ? 'Audio could not be loaded'
     : 'Starting audio…';
 
   return (
@@ -603,14 +607,23 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
           <source src={test.audio_url} type="audio/mpeg" />
         </audio>
       )}
-      {source.exam && phase === 'blocked' && (
+      {source.exam && (phase === 'blocked' || phase === 'failed') && (
         <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 max-w-md text-center shadow-2xl">
             <Headphones className="w-10 h-10 mx-auto mb-3 text-[#1a3a5f]" />
-            <p className="font-bold text-lg mb-2">Put your headphones on</p>
-            <p className="text-sm text-gray-600 mb-5">Your browser needs one click before it plays sound. The recording plays once and cannot be paused.</p>
-            <button onClick={startRecording} className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#1a3a5f] text-[#ffffff] rounded font-bold hover:bg-[#244b78]">
-              <Play className="w-4 h-4" /> Start audio
+            {phase === 'blocked' ? (
+              <>
+                <p className="font-bold text-lg mb-2">Ready to start the Listening test</p>
+                <p className="text-sm text-gray-600 mb-5">Click the button to start the recording. It plays once and cannot be paused, so check your volume first.</p>
+              </>
+            ) : (
+              <>
+                <p className="font-bold text-lg mb-2">The recording could not be loaded</p>
+                <p className="text-sm text-gray-600 mb-5">Check your internet connection and try again. If it keeps failing, tell your teacher.</p>
+              </>
+            )}
+            <button onClick={() => { audioRef.current?.load(); startRecording(); }} className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#1a3a5f] text-[#ffffff] rounded font-bold hover:bg-[#244b78]">
+              <Play className="w-4 h-4" /> {phase === 'blocked' ? 'Start audio' : 'Try again'}
             </button>
           </div>
         </div>
