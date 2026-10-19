@@ -7,6 +7,7 @@ export interface MockStatus {
   done: MockSection[];
   in_progress: MockSection | null;
   next: MockSection | null;
+  scores: { listening: number | null; reading: number | null; writing: number | null; overall: number | null } | null;
 }
 
 export interface MockSummary {

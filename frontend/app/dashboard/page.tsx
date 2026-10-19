@@ -1,7 +1,8 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
-import { Book, Headphones, PenTool, Mic, ArrowRight, BarChart2 } from "lucide-react";
+import { Book, Headphones, PenTool, Mic, ArrowRight, BarChart2, ClipboardCheck, CheckCircle2 } from "lucide-react";
+import type { MockSummary } from "@/lib/mock";
 import Link from "next/link";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const [readingAttempts, setReadingAttempts] = useState<Attempt[]>([]);
   const [listeningAttempts, setListeningAttempts] = useState<Attempt[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [latestMock, setLatestMock] = useState<MockSummary | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -26,6 +28,11 @@ export default function DashboardPage() {
       setReadingAttempts(r.data.results ?? r.data);
       setListeningAttempts(l.data.results ?? l.data);
     }).finally(() => setLoadingStats(false));
+    // Newest mock (highest number) for the dashboard card
+    api.get("/mock/").then((r) => {
+      const list: MockSummary[] = r.data;
+      setLatestMock(list.length ? list.reduce((a, b) => (b.number > a.number ? b : a)) : null);
+    }).catch(() => setLatestMock(null));
   }, []);
 
   const avg = (attempts: Attempt[]) =>
@@ -75,6 +82,52 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {latestMock && (() => {
+        const st = latestMock.my_status;
+        const state = st.completed ? "done" : st.started ? "progress" : "new";
+        const sc = st.scores;
+        return (
+          <div className="mb-12 rounded-2xl bg-[#1a3a5f] text-white p-8 flex flex-col md:flex-row md:items-center gap-6">
+            <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+              <ClipboardCheck className="w-7 h-7" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs uppercase tracking-wider text-blue-200 mb-1">
+                {state === "done" ? "Your latest mock" : state === "progress" ? "Mock in progress" : "New mock test"}
+              </p>
+              <h3 className="text-2xl font-bold mb-1">Mock {latestMock.number}</h3>
+              {state === "done" && sc ? (
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-blue-100 mt-2">
+                  {sc.listening !== null && <span>Listening <strong className="text-white">{sc.listening.toFixed(1)}</strong></span>}
+                  {sc.reading !== null && <span>Reading <strong className="text-white">{sc.reading.toFixed(1)}</strong></span>}
+                  <span>Writing <strong className="text-white">{sc.writing !== null ? sc.writing.toFixed(1) : "not marked"}</strong></span>
+                </div>
+              ) : state === "progress" ? (
+                <p className="text-blue-100 text-sm">
+                  {st.done.length} of {st.sections.length} tests submitted. Next: <span className="capitalize font-semibold text-white">{st.in_progress || st.next}</span>
+                </p>
+              ) : (
+                <p className="text-blue-100 text-sm">
+                  {latestMock.sections.map((x) => x[0].toUpperCase() + x.slice(1)).join(" → ")}, under real exam timing. One attempt.
+                </p>
+              )}
+            </div>
+            {state === "done" && sc?.overall !== null && sc?.overall !== undefined && (
+              <div className="text-center shrink-0 md:px-6 md:border-l md:border-white/15">
+                <p className="text-xs uppercase tracking-wider text-blue-200">Overall</p>
+                <p className="text-4xl font-extrabold">{sc.overall.toFixed(1)}</p>
+              </div>
+            )}
+            <Link
+              href={state === "done" ? `/mock/${latestMock.id}/result` : `/mock/${latestMock.id}`}
+              className="inline-flex items-center justify-center gap-2 bg-white text-[#1a3a5f] font-bold px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors shrink-0"
+            >
+              {state === "done" ? <><CheckCircle2 className="w-5 h-5" /> See results</> : state === "progress" ? <>Continue <ArrowRight className="w-5 h-5" /></> : <>Start mock <ArrowRight className="w-5 h-5" /></>}
+            </Link>
+          </div>
+        );
+      })()}
 
       <div className="mb-12 p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
         <p className="italic text-gray-800 text-2xl font-semibold leading-relaxed mb-4">&ldquo;{quote.text}&rdquo;</p>

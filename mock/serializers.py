@@ -43,6 +43,7 @@ def attempt_status(attempt: MockAttempt | None, mock: Mock) -> dict:
             'done': [], 'in_progress': None, 'next': order[0] if order else None,
         }
     done = [s for s in order if attempt.section_done(s)]
+    completed = attempt.completed_at is not None
     in_progress = next((s for s in order if attempt.section_started(s) and not attempt.section_done(s)), None)
     return {
         'started': True,
@@ -51,7 +52,27 @@ def attempt_status(attempt: MockAttempt | None, mock: Mock) -> dict:
         'done': done,
         'in_progress': in_progress,
         'next': attempt.next_section(),
+        'scores': ({
+            'listening': float(attempt.listening_band) if 'listening' in order else None,
+            'reading': float(attempt.reading_band) if 'reading' in order else None,
+            'writing': float(attempt.writing_band) if attempt.writing_band is not None else None,
+            'overall': overall_estimate(attempt),
+        } if completed else None),
     }
+
+
+def overall_estimate(attempt: MockAttempt):
+    """Average of the objective bands (plus writing if a teacher marked it), rounded to the nearest 0.5."""
+    bands = []
+    if attempt.mock.has_listening:
+        bands.append(float(attempt.listening_band))
+    if attempt.mock.has_reading:
+        bands.append(float(attempt.reading_band))
+    if attempt.writing_band is not None:
+        bands.append(float(attempt.writing_band))
+    if not bands:
+        return None
+    return round(sum(bands) / len(bands) * 2) / 2
 
 
 class MockListSerializer(serializers.ModelSerializer):
@@ -116,15 +137,4 @@ class MockResultSerializer(serializers.ModelSerializer):
         return rows
 
     def get_overall_estimate(self, obj):
-        """Average of the objective bands (plus writing if a teacher marked it), rounded to the nearest 0.5."""
-        bands = []
-        if obj.mock.has_listening:
-            bands.append(float(obj.listening_band))
-        if obj.mock.has_reading:
-            bands.append(float(obj.reading_band))
-        if obj.writing_band is not None:
-            bands.append(float(obj.writing_band))
-        if not bands:
-            return None
-        avg = sum(bands) / len(bands)
-        return round(avg * 2) / 2
+        return overall_estimate(obj)
