@@ -177,6 +177,7 @@ class MockSectionSubmitView(APIView):
             questions = {q.id: q for q in mock.questions.filter(section=section)}
             raw = 0
             rows = []
+            credited = set()  # (group key, letter) already scored in a choose-TWO group
             for ans in ser.validated_data['answers']:
                 q = questions.get(ans['question_id'])
                 if not q:
@@ -187,8 +188,16 @@ class MockSectionSubmitView(APIView):
                     # Choose-TWO groups: each question number holds one letter and scores
                     # if that letter is one of the correct ones (IELTS marking). A typed
                     # "B,D" (old text-box style) must match the whole set.
+                    # Each correct letter scores once per group, so the same letter
+                    # sent for both Q18 and Q19 earns one mark, not two.
                     picked = [a.strip() for a in user_ans.split(',') if a.strip()]
-                    ok = (len(picked) == 1 and picked[0] in accepted) or (len(picked) > 1 and sorted(picked) == sorted(accepted))
+                    if len(picked) == 1:
+                        key = (q.part, q.correct_answer, repr(q.options), picked[0])
+                        ok = picked[0] in accepted and key not in credited
+                        if ok:
+                            credited.add(key)
+                    else:
+                        ok = len(picked) > 1 and sorted(picked) == sorted(accepted)
                 else:
                     ok = bool(user_ans) and user_ans in accepted
                 raw += int(ok)

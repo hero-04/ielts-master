@@ -602,10 +602,35 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
   );
 
   // ── Choose-TWO multiple choice (one group, several question numbers) ───
-  const groupOf = (q: ReadingQuestion) => {
-    const same = passageQuestions.filter(o => o.question_type === 'multiple_choice_multiple' && o.question_text === q.question_text);
-    return same.sort((a, b) => a.order_number - b.order_number);
-  };
+  // A "Questions 18–19, choose TWO" block is stored as one row per question number.
+  // Group consecutive choose-many rows that share the same options; if the first row's
+  // text names a range ("Questions 18–19"), that range caps the group size.
+  const mcmGroups = (() => {
+    const sorted = passageQuestions
+      .filter(o => o.question_type === 'multiple_choice_multiple')
+      .sort((a, b) => a.order_number - b.order_number);
+    const groups: ReadingQuestion[][] = [];
+    let cur: ReadingQuestion[] = [];
+    let cap = Infinity;
+    for (const q of sorted) {
+      const prev = cur[cur.length - 1];
+      const joins = prev
+        && q.order_number === prev.order_number + 1
+        && JSON.stringify(q.options || []) === JSON.stringify(prev.options || [])
+        && cur.length < cap;
+      if (!joins) {
+        if (cur.length) groups.push(cur);
+        cur = [q];
+        const m = q.question_text.match(/Questions?\s+(\d+)\s*[–-]\s*(\d+)/);
+        cap = m ? Number(m[2]) - Number(m[1]) + 1 : Infinity;
+      } else {
+        cur.push(q);
+      }
+    }
+    if (cur.length) groups.push(cur);
+    return groups;
+  })();
+  const groupOf = (q: ReadingQuestion) => mcmGroups.find(g => g.some(x => x.id === q.id)) || [q];
 
   const MultiChoiceGroup = ({ group }: { group: ReadingQuestion[] }) => {
     const letters = 'ABCDEFGHIJ'.split('');
@@ -628,7 +653,7 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
           <span className="px-2 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm">{first}–{last}</span>
           <span>{text}</span>
         </p>
-        <p className="text-sm text-gray-500 mb-3 pl-1">Choose {group.length === 2 ? 'TWO' : group.length === 3 ? 'THREE' : group.length} answers. ({selected.length} of {group.length} selected)</p>
+        <p className="text-sm text-gray-500 mb-3 pl-1">Choose <strong className="text-gray-700">{group.length === 2 ? 'TWO' : group.length === 3 ? 'THREE' : group.length}</strong> letters. ({selected.length} of {group.length} selected)</p>
         <div className="space-y-2">
           {opts.map((opt, i) => {
             const l = letters[i];
