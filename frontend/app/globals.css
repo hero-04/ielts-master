@@ -113,3 +113,4 @@ body {
 .exam-html .gap-num { font-weight: 700; color: #6b7280; margin: 0 auto; }
 .exam-html .gap-clear { color: #9ca3af; font-size: 0.8em; background: none; border: 0; padding: 0; cursor: pointer; }
 .exam-html .gap-clear:hover { color: #ef4444; }
+.exam-html table.plain, .exam-html table.plain td, .exam-html table.plain th { border: 0; background: transparent; padding: 4px 18px 4px 0; }
