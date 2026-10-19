@@ -73,10 +73,10 @@ export default function MockResultPage() {
             {r.sections.includes("writing") && (
               <Card icon={PenTool} title="Writing" big={r.writing_band ?? "—"} sub={r.writing_band ? "Marked by teacher" : `${r.task1_words} + ${r.task2_words} words · not marked yet`} onClick={() => setOpen(open === "writing" ? null : "writing")} />
             )}
-            <div className="rounded-2xl bg-gray-900 text-white p-5 flex flex-col">
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-2">Estimated overall</p>
+            <div className="rounded-2xl bg-[#1a3a5f] text-[#ffffff] p-5 flex flex-col">
+              <p className="text-xs uppercase tracking-wider text-[#a9c4e4] mb-2">Estimated overall</p>
               <p className="text-4xl font-extrabold">{r.overall_estimate ?? "—"}</p>
-              <p className="text-xs text-gray-400 mt-auto pt-3">Average of the marked sections, rounded to the nearest half band. Speaking is not included.</p>
+              <p className="text-xs text-[#a9c4e4] mt-auto pt-3">Average of the marked sections, rounded to the nearest half band. Speaking is not included.</p>
             </div>
           </div>
 

@@ -88,40 +88,40 @@ export default function DashboardPage() {
         const state = st.completed ? "done" : st.started ? "progress" : "new";
         const sc = st.scores;
         return (
-          <div className="mb-12 rounded-2xl bg-[#1a3a5f] text-white p-8 flex flex-col md:flex-row md:items-center gap-6">
-            <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+          <div className="mb-12 rounded-2xl bg-[#1a3a5f] text-[#ffffff] p-8 flex flex-col md:flex-row md:items-center gap-6">
+            <div className="w-14 h-14 rounded-xl bg-[#ffffff1a] flex items-center justify-center shrink-0">
               <ClipboardCheck className="w-7 h-7" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs uppercase tracking-wider text-blue-200 mb-1">
+              <p className="text-xs uppercase tracking-wider text-[#a9c4e4] mb-1">
                 {state === "done" ? "Your latest mock" : state === "progress" ? "Mock in progress" : "New mock test"}
               </p>
               <h3 className="text-2xl font-bold mb-1">Mock {latestMock.number}</h3>
               {state === "done" && sc ? (
-                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-blue-100 mt-2">
-                  {sc.listening !== null && <span>Listening <strong className="text-white">{sc.listening.toFixed(1)}</strong></span>}
-                  {sc.reading !== null && <span>Reading <strong className="text-white">{sc.reading.toFixed(1)}</strong></span>}
-                  <span>Writing <strong className="text-white">{sc.writing !== null ? sc.writing.toFixed(1) : "not marked"}</strong></span>
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-[#d3e2f3] mt-2">
+                  {sc.listening !== null && <span>Listening <strong className="text-[#ffffff]">{sc.listening.toFixed(1)}</strong></span>}
+                  {sc.reading !== null && <span>Reading <strong className="text-[#ffffff]">{sc.reading.toFixed(1)}</strong></span>}
+                  <span>Writing <strong className="text-[#ffffff]">{sc.writing !== null ? sc.writing.toFixed(1) : "not marked"}</strong></span>
                 </div>
               ) : state === "progress" ? (
-                <p className="text-blue-100 text-sm">
-                  {st.done.length} of {st.sections.length} tests submitted. Next: <span className="capitalize font-semibold text-white">{st.in_progress || st.next}</span>
+                <p className="text-[#d3e2f3] text-sm">
+                  {st.done.length} of {st.sections.length} tests submitted. Next: <span className="capitalize font-semibold text-[#ffffff]">{st.in_progress || st.next}</span>
                 </p>
               ) : (
-                <p className="text-blue-100 text-sm">
+                <p className="text-[#d3e2f3] text-sm">
                   {latestMock.sections.map((x) => x[0].toUpperCase() + x.slice(1)).join(" → ")}, under real exam timing. One attempt.
                 </p>
               )}
             </div>
             {state === "done" && sc?.overall !== null && sc?.overall !== undefined && (
-              <div className="text-center shrink-0 md:px-6 md:border-l md:border-white/15">
-                <p className="text-xs uppercase tracking-wider text-blue-200">Overall</p>
+              <div className="text-center shrink-0 md:px-6 md:border-l md:border-[#ffffff26]">
+                <p className="text-xs uppercase tracking-wider text-[#a9c4e4]">Overall</p>
                 <p className="text-4xl font-extrabold">{sc.overall.toFixed(1)}</p>
               </div>
             )}
             <Link
               href={state === "done" ? `/mock/${latestMock.id}/result` : `/mock/${latestMock.id}`}
-              className="inline-flex items-center justify-center gap-2 bg-white text-[#1a3a5f] font-bold px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors shrink-0"
+              className="inline-flex items-center justify-center gap-2 bg-[#ffffff] text-[#1a3a5f] font-bold px-6 py-3 rounded-lg hover:bg-[#e8f0fa] transition-colors shrink-0"
             >
               {state === "done" ? <><CheckCircle2 className="w-5 h-5" /> See results</> : state === "progress" ? <>Continue <ArrowRight className="w-5 h-5" /></> : <>Start mock <ArrowRight className="w-5 h-5" /></>}
             </Link>
