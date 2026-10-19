@@ -14,14 +14,16 @@ from reading.models import ReadingQuestion
 from listening.models import ListeningQuestion
 from writing.models import WritingPrompt
 from vocabulary.models import VocabularyWord
+from mock.models import MockQuestion
 
 READING_TYPES = {c.value for c in ReadingQuestion.QuestionType}
 LISTENING_TYPES = {c.value for c in ListeningQuestion.QuestionType}
 WRITING_TASKS = {c.value for c in WritingPrompt.TaskType}
+MOCK_TYPES = {c.value for c in MockQuestion.QuestionType}
 VOCAB_TOPICS = {c.value for c in VocabularyWord.Topic}
 VOCAB_DIFFICULTIES = {c.value for c in VocabularyWord.Difficulty}
 
-MODULES = ('reading', 'listening', 'writing', 'speaking', 'vocabulary')
+MODULES = ('reading', 'listening', 'writing', 'speaking', 'vocabulary', 'mocks')
 
 LETTER_RE = re.compile(r'^[A-Z]$')
 MULTI_BLANK_RE = re.compile(r'(\d+)\s*\.{4,}')
@@ -204,6 +206,76 @@ def validate_vocabulary(words: list, rep: Report):
         seen.add(key)
 
 
+def validate_mocks(mocks: list, rep: Report):
+    """
+    A mock is one object with its own listening / reading / writing content:
+      {"number": 1, "title": "…",
+       "listening": {"audio_url": "…", "transcript": "…", "questions": [{"order", "section": 1-4, "type", "text", "answer", "options"}]},
+       "reading":   {"passages": {"A": {"title","text"}, …}, "questions": [{"order", "passage": "A", …}]},
+       "writing":   {"task1": {"prompt_text", "prompt_image"}, "task2": {"prompt_text"}}}
+    Any of the three sections may be omitted (it is then skipped in the exam).
+    """
+    for i, m in enumerate(mocks):
+        where = f'mocks[{i}]'
+        if not isinstance(m, dict):
+            rep.error(where, 'must be an object'); continue
+        n = m.get('number')
+        if not isinstance(n, int) or n < 1:
+            rep.error(where, f'number must be a positive integer, got {n!r}')
+        if not any(k in m for k in ('listening', 'reading', 'writing')):
+            rep.error(where, 'a mock needs at least one of: listening, reading, writing')
+
+        L = m.get('listening')
+        if L is not None:
+            lw = f'{where}.listening'
+            if not isinstance(L, dict):
+                rep.error(lw, 'must be an object')
+            else:
+                if not L.get('audio_url'):
+                    rep.warn(lw, 'no audio_url — the Listening section will be skipped until one is added')
+                orders: list[int] = []
+                for j, q in enumerate(L.get('questions') or []):
+                    qw = f'{lw}.questions[{j}]'
+                    if q.get('section') not in (1, 2, 3, 4):
+                        rep.error(qw, 'section must be 1, 2, 3 or 4')
+                    _check_question_common(q, qw, MOCK_TYPES, rep)
+                    orders.extend(_expanded_orders(q))
+                _check_orders(orders, lw, rep, expected=40)
+
+        R = m.get('reading')
+        if R is not None:
+            rw = f'{where}.reading'
+            if not isinstance(R, dict):
+                rep.error(rw, 'must be an object')
+            else:
+                passages = R.get('passages') or {}
+                for key in ('A', 'B', 'C'):
+                    p = passages.get(key)
+                    if not isinstance(p, dict) or not p.get('text'):
+                        rep.error(rw, f'passages.{key}.text is required')
+                orders = []
+                for j, q in enumerate(R.get('questions') or []):
+                    qw = f'{rw}.questions[{j}]'
+                    if q.get('passage') not in ('A', 'B', 'C'):
+                        rep.error(qw, 'passage must be "A", "B" or "C"')
+                    _check_question_common(q, qw, MOCK_TYPES, rep)
+                    orders.extend(_expanded_orders(q))
+                _check_orders(orders, rw, rep, expected=40)
+
+        W = m.get('writing')
+        if W is not None:
+            ww = f'{where}.writing'
+            if not isinstance(W, dict):
+                rep.error(ww, 'must be an object')
+            else:
+                for task in ('task1', 'task2'):
+                    t = W.get(task)
+                    if not isinstance(t, dict) or not t.get('prompt_text'):
+                        rep.error(ww, f'{task}.prompt_text is required')
+                if isinstance(W.get('task1'), dict) and not W['task1'].get('prompt_image'):
+                    rep.warn(ww, 'task1 usually needs a prompt_image URL (chart / diagram)')
+
+
 def _expanded_orders(q: dict) -> list[int]:
     """A multi-blank block expands into one question row per blank number."""
     if q.get('type') in ('form_completion', 'table_completion') and isinstance(q.get('answers'), dict):
@@ -224,7 +296,7 @@ def _check_orders(orders: list[int], where: str, rep: Report, expected: int):
 def validate(data: dict) -> Report:
     rep = Report()
     if not isinstance(data, dict):
-        rep.error('root', 'file must be a JSON object with module keys (reading, listening, writing, speaking, vocabulary)')
+        rep.error('root', 'file must be a JSON object with module keys (reading, listening, writing, speaking, vocabulary, mocks)')
         return rep
     unknown = set(data) - set(MODULES) - {'$schema', 'comment', '_comment'}
     if unknown:
@@ -234,6 +306,7 @@ def validate(data: dict) -> Report:
     for key, fn in (
         ('reading', validate_reading), ('listening', validate_listening), ('writing', validate_writing),
         ('speaking', validate_speaking), ('vocabulary', validate_vocabulary),
+        ('mocks', validate_mocks),
     ):
         if key in data:
             if not isinstance(data[key], list):

@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     'speaking',
     'payments',
     'content',   # import_content / export_content management commands
+    'mock',      # full mock tests with their own content pool
 ]
 
 MIDDLEWARE = [
@@ -340,6 +341,7 @@ UNFOLD = {
                     {'title': 'Writing prompts', 'icon': 'edit_note', 'link': reverse_lazy('admin:writing_writingprompt_changelist')},
                     {'title': 'Speaking tests', 'icon': 'mic', 'link': reverse_lazy('admin:speaking_speakingtest_changelist')},
                     {'title': 'Vocabulary', 'icon': 'dictionary', 'link': reverse_lazy('admin:vocabulary_vocabularyword_changelist')},
+                    {'title': 'Mock tests', 'icon': 'assignment', 'link': reverse_lazy('admin:mock_mock_changelist')},
                 ],
             },
             {
@@ -352,6 +354,7 @@ UNFOLD = {
                     {'title': 'Listening attempts', 'icon': 'fact_check', 'link': reverse_lazy('admin:listening_listeningattempt_changelist')},
                     {'title': 'Writing submissions', 'icon': 'draft', 'link': reverse_lazy('admin:writing_writingsubmission_changelist')},
                     {'title': 'Word progress', 'icon': 'school', 'link': reverse_lazy('admin:vocabulary_userwordprogress_changelist')},
+                    {'title': 'Mock attempts', 'icon': 'workspace_premium', 'link': reverse_lazy('admin:mock_mockattempt_changelist')},
                 ],
             },
             {

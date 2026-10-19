@@ -21,6 +21,9 @@ urlpatterns = [
     # Writing endpoints
     path('api/writing/', include('writing.urls', namespace='writing')),
 
+    # Mock test endpoints
+    path('api/mock/', include('mock.urls', namespace='mock')),
+
     # Speaking endpoints
     path('api/speaking/', include('speaking.urls', namespace='speaking')),
 ]

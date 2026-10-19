@@ -17,6 +17,7 @@ import {
   Moon,
   Volume2,
   VolumeX,
+  ClipboardCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -30,6 +31,7 @@ const navItems = [
   { name: "Vocabulary", href: "/vocabulary", icon: BookOpen },
   { name: "Writing", href: "/writing", icon: PenTool },
   { name: "Speaking", href: "/speaking", icon: Mic },
+  { name: "Mock Tests", href: "/mock", icon: ClipboardCheck },
   { name: "My Tests", href: "/my-tests", icon: History },
 ];
 

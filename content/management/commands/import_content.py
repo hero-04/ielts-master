@@ -24,10 +24,11 @@ from listening.models import ListeningTest, ListeningQuestion
 from writing.models import WritingPrompt
 from speaking.models import SpeakingTest, SpeakingQuestion
 from vocabulary.models import VocabularyWord
+from mock.models import Mock, MockQuestion
 
 
 class Command(BaseCommand):
-    help = 'Import reading/listening/writing/speaking/vocabulary content from JSON files.'
+    help = 'Import reading/listening/writing/speaking/vocabulary/mock content from JSON files.'
 
     def add_arguments(self, parser):
         parser.add_argument('files', nargs='+', help='One or more JSON files')
@@ -58,7 +59,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Dry run: all files valid. Nothing written.'))
             return
 
-        counts = {'reading': 0, 'listening': 0, 'writing': 0, 'speaking': 0, 'vocabulary': 0, 'skipped': 0}
+        counts = {'reading': 0, 'listening': 0, 'writing': 0, 'speaking': 0, 'vocabulary': 0, 'mocks': 0, 'skipped': 0}
         with transaction.atomic():
             for path, data in payloads:
                 self.stdout.write(f'Importing {path.name} …')
@@ -71,6 +72,8 @@ class Command(BaseCommand):
                 for t in data.get('speaking', []):
                     counts['speaking' if self._import_speaking(t, opts['replace']) else 'skipped'] += 1
                 counts['vocabulary'] += self._import_vocabulary(data.get('vocabulary', []), opts['replace'])
+                for m in data.get('mocks', []):
+                    counts['mocks' if self._import_mock(m, opts['replace']) else 'skipped'] += 1
 
         summary = ', '.join(f'{v} {k}' for k, v in counts.items() if v)
         self.stdout.write(self.style.SUCCESS(f'Done: {summary or "nothing to do"}.'))
@@ -181,6 +184,44 @@ class Command(BaseCommand):
                                          question_text=it['question'], sample_answer=it['sample_answer']))
         SpeakingQuestion.objects.bulk_create(rows)
         self.stdout.write(f'  ok    {label}: {len(rows)} questions')
+        return True
+
+    def _import_mock(self, m: dict, replace: bool) -> bool:
+        label = f'Mock {m["number"]}'
+        existing = Mock.objects.filter(number=m['number']).first()
+        if existing:
+            if not replace:
+                return self._skip(label)
+            existing.delete()
+        L, R, W = m.get('listening') or {}, m.get('reading') or {}, m.get('writing') or {}
+        P = R.get('passages') or {}
+        T1, T2 = W.get('task1') or {}, W.get('task2') or {}
+        mock = Mock.objects.create(
+            number=m['number'], title=m.get('title', ''), is_active=m.get('is_active', True),
+            listening_audio_url=L.get('audio_url') or '', listening_transcript=L.get('transcript') or '',
+            passage_a_title=P.get('A', {}).get('title', ''), passage_a=P.get('A', {}).get('text', ''),
+            passage_b_title=P.get('B', {}).get('title', ''), passage_b=P.get('B', {}).get('text', ''),
+            passage_c_title=P.get('C', {}).get('title', ''), passage_c=P.get('C', {}).get('text', ''),
+            task1_prompt_text=T1.get('prompt_text', ''), task1_prompt_image=T1.get('prompt_image') or '',
+            task2_prompt_text=T2.get('prompt_text', ''),
+        )
+        rows = []
+        for q in L.get('questions') or []:
+            for r in self._expand_questions(q):
+                rows.append(MockQuestion(
+                    mock=mock, section='listening', part=str(r['section']), question_type=r['type'],
+                    question_text=r['text'], correct_answer=str(r['answer']), options=r.get('options', []),
+                    question_group=r.get('group', ''), order_number=r['order'],
+                ))
+        for q in R.get('questions') or []:
+            for r in self._expand_questions(q):
+                rows.append(MockQuestion(
+                    mock=mock, section='reading', part=r['passage'], question_type=r['type'],
+                    question_text=r['text'], correct_answer=str(r['answer']), options=r.get('options', []),
+                    question_group=r.get('group', ''), order_number=r['order'],
+                ))
+        MockQuestion.objects.bulk_create(rows)
+        self.stdout.write(f'  ok    {label}: sections {", ".join(mock.section_order()) or "none"}, {len(rows)} questions')
         return True
 
     def _import_vocabulary(self, words: list, replace: bool) -> int:

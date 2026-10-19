@@ -33,7 +33,8 @@ A full example with every module is in `examples/sample_test.json`. Everything i
   "listening":  [ …tests… ],
   "writing":    [ …prompts… ],
   "speaking":   [ …tests… ],
-  "vocabulary": [ …words… ]
+  "vocabulary": [ …words… ],
+  "mocks":      [ …full mock tests… ]
 }
 ```
 
@@ -124,6 +125,25 @@ Keep files you must not publish in `content/private/` — that folder is git-ign
 ```
 
 `topic`: environment, technology, health, education, society, science, business, culture. `difficulty`: easy, medium, hard. Words are unique; `--replace` updates an existing word.
+
+## Mock test
+
+A mock is a complete sitting (Listening → Reading → Writing) with its **own** content, never shared with the
+practice books. Students see it as "Mock 1", "Mock 2", … and can sit each one once. Questions use the same
+shape as the reading / listening tests above (including multi-blank blocks).
+
+```json
+{"number": 1, "title": "IDP official demo",
+ "listening": {"audio_url": "https://…/mock1.mp3", "transcript": "",
+               "questions": [{"order": 1, "section": 1, "type": "form_completion", "text": "…", "answer": "…"}]},
+ "reading":   {"passages": {"A": {"title": "…", "text": "…"}, "B": {…}, "C": {…}},
+               "questions": [{"order": 1, "passage": "A", "type": "tfng", "text": "…", "answer": "True"}]},
+ "writing":   {"task1": {"prompt_text": "…", "prompt_image": "https://…"}, "task2": {"prompt_text": "…"}}}
+```
+
+Any of the three sections may be left out (or added later in the admin under Content → Mock tests); the exam
+simply skips a section that has no content. A listening section without `audio_url` is skipped too.
+`--replace` deletes the mock **and every student's attempt at it**.
 
 ## Tips for building test files fast
 
