@@ -2,7 +2,7 @@
 import React from "react";
 
 import { useState, useEffect, useRef } from "react";
-import { Clock, ChevronLeft, ChevronRight, Settings, HelpCircle, CheckSquare, Highlighter, X } from "lucide-react";
+import { Clock, ChevronLeft, ChevronRight, Settings, HelpCircle, CheckSquare, Highlighter, X, Check } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import type { ExamSource } from "./types";
@@ -48,6 +48,8 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
   const [activePassage, setActivePassage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [focusedOrderNumber, setFocusedOrderNumber] = useState<number | null>(null);
+  // Matching headings: a heading picked by click (alternative to dragging)
+  const [pickedHeading, setPickedHeading] = useState<string | null>(null);
   const [highlights, setHighlights] = useState<Record<string, { start: number; end: number }[]>>({});
   const [pendingSelection, setPendingSelection] = useState<{
     paraIndex: number; start: number; end: number; top: number; left: number;
@@ -483,6 +485,169 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
   };
 
   const passageQuestions = getPassageQuestions(activePassage);
+
+  // A question counts as answered when its box has something in it
+  // (multi-blank form/table rows store their value under "<rowId>_<number>").
+  const isAnswered = (q: ReadingQuestion) => {
+    if ((answers[`${q.id}`] || '').trim()) return true;
+    const suffix = `_${q.order_number}`;
+    return Object.entries(answers).some(([k, v]) => k.endsWith(suffix) && k.includes('_') && (v || '').trim() !== '');
+  };
+
+  const goTo = (passage: number, orderNumber?: number) => {
+    setActivePassage(passage);
+    if (orderNumber !== undefined) setFocusedOrderNumber(orderNumber);
+  };
+
+  // ── Matching headings (drag & drop) ────────────────────────────────────
+  // A passage paragraph written as "SECTION 14 — [choose heading]" becomes the drop box
+  // for question 14. Without such markers the drop boxes are shown in the questions panel.
+  const SECTION_MARK = /^\s*SECTION\s+(\d+)\s*[—–-]\s*\[choose heading\]\s*$/i;
+  const headingQs = passageQuestions.filter(q => q.question_type === 'matching_headings');
+  const headingOptions = headingQs[0]?.options ?? [];
+  const letterOf = (opt: string) => (opt.match(/^([A-Za-z]+)[.)]\s*/)?.[1] ?? opt).toUpperCase();
+  const usedHeadings = new Set(headingQs.map(q => answers[`${q.id}`]).filter(Boolean));
+  const markedSections = new Set(
+    ((activePassage === 1 ? test.passage_a : activePassage === 2 ? test.passage_b : test.passage_c) || '').split('\n\n').map(p => p.match(SECTION_MARK)?.[1]).filter(Boolean).map(Number)
+  );
+
+  const placeHeading = (q: ReadingQuestion, letter: string) => {
+    setAnswers(prev => {
+      const next = { ...prev };
+      // each heading can be used once — take it off any other box first
+      headingQs.forEach(o => { if (next[`${o.id}`] === letter) next[`${o.id}`] = ''; });
+      next[`${q.id}`] = letter;
+      return next;
+    });
+    setPickedHeading(null);
+    setFocusedOrderNumber(q.order_number);
+  };
+
+  const HeadingDropBox = ({ q }: { q: ReadingQuestion }) => {
+    const val = answers[`${q.id}`] || '';
+    const label = headingOptions.find(o => letterOf(o) === val);
+    return (
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); const l = e.dataTransfer.getData('text/plain'); if (l) placeHeading(q, l); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (pickedHeading) placeHeading(q, pickedHeading);
+          else setFocusedOrderNumber(q.order_number);
+        }}
+        className={`not-italic font-sans text-base text-left flex items-center gap-3 min-h-[52px] px-3 py-2 rounded-lg border-2 transition-colors cursor-pointer ${
+          val ? 'border-[#1a3a5f] bg-blue-50' : pickedHeading ? 'border-dashed border-[#1a3a5f] bg-blue-50/50' : 'border-dashed border-gray-400 bg-white'
+        } ${focusedOrderNumber === q.order_number ? 'ring-2 ring-[#1a3a5f]/30' : ''}`}
+      >
+        <span className="w-7 h-7 shrink-0 rounded border border-gray-400 bg-white text-sm font-bold flex items-center justify-center text-gray-700">{q.order_number}</span>
+        {val ? (
+          <>
+            <span
+              draggable
+              onDragStart={(e) => e.dataTransfer.setData('text/plain', val)}
+              className="flex-1 text-gray-900"
+            >{label ?? val}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAnswerChange(q.id, ''); }}
+              className="text-gray-400 hover:text-red-500 text-sm px-1"
+              title="Remove"
+            >✕</button>
+          </>
+        ) : (
+          <span className="text-gray-400 text-sm">{pickedHeading ? 'Click to place the heading here' : 'Drag a heading here'}</span>
+        )}
+      </div>
+    );
+  };
+
+  const HeadingBank = () => (
+    <div className="space-y-4">
+      <p className="font-medium">
+        Questions {headingQs[0].order_number}–{headingQs[headingQs.length - 1].order_number}
+      </p>
+      <p className="text-sm text-gray-600">
+        Choose the correct heading for each section from the list of headings below.
+        {markedSections.size > 0 ? ' Drag a heading into the box above each section of the passage' : ' Drag a heading into a box'} (or click a heading, then click a box).
+      </p>
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <p className="font-bold text-sm mb-3">List of Headings</p>
+        <div className="space-y-2">
+          {headingOptions.map(opt => {
+            const l = letterOf(opt);
+            if (usedHeadings.has(l)) return null;
+            return (
+              <div
+                key={l}
+                draggable
+                onDragStart={(e) => e.dataTransfer.setData('text/plain', l)}
+                onClick={(e) => { e.stopPropagation(); setPickedHeading(pickedHeading === l ? null : l); }}
+                className={`px-3 py-2 rounded-lg border text-sm cursor-grab active:cursor-grabbing select-none transition-colors ${
+                  pickedHeading === l ? 'border-[#1a3a5f] bg-[#1a3a5f] text-white' : 'border-gray-300 bg-gray-50 hover:border-[#1a3a5f]'
+                }`}
+              >{opt}</div>
+            );
+          })}
+          {usedHeadings.size === headingOptions.length && (
+            <p className="text-xs text-gray-400">All headings placed.</p>
+          )}
+        </div>
+      </div>
+      {headingQs.filter(q => !markedSections.has(q.order_number)).map(q => (
+        <div key={q.id}>
+          <p className="text-sm mb-2">{q.question_text}</p>
+          <HeadingDropBox q={q} />
+        </div>
+      ))}
+    </div>
+  );
+
+  // ── Choose-TWO multiple choice (one group, several question numbers) ───
+  const groupOf = (q: ReadingQuestion) => {
+    const same = passageQuestions.filter(o => o.question_type === 'multiple_choice_multiple' && o.question_text === q.question_text);
+    return same.sort((a, b) => a.order_number - b.order_number);
+  };
+
+  const MultiChoiceGroup = ({ group }: { group: ReadingQuestion[] }) => {
+    const letters = 'ABCDEFGHIJ'.split('');
+    const opts = group[0].options || [];
+    const selected = group.map(q => answers[`${q.id}`]).filter(Boolean);
+    const toggle = (l: string) => {
+      let next = selected.includes(l) ? selected.filter(x => x !== l) : selected.length < group.length ? [...selected, l] : selected;
+      next = [...next].sort();
+      setAnswers(prev => {
+        const out = { ...prev };
+        group.forEach((q, i) => { out[`${q.id}`] = next[i] || ''; });
+        return out;
+      });
+    };
+    const first = group[0].order_number, last = group[group.length - 1].order_number;
+    const text = group[0].question_text.replace(/^Questions?\s+[\d–-]+\.?\s*/, '').replace(/\s*Write (TWO|THREE) letters.*$/i, '');
+    return (
+      <div>
+        <p className="font-medium mb-2 flex items-start gap-3">
+          <span className="px-2 h-7 bg-primary text-white rounded-full inline-flex items-center justify-center shrink-0 text-sm">{first}–{last}</span>
+          <span>{text}</span>
+        </p>
+        <p className="text-sm text-gray-500 mb-3 pl-1">Choose {group.length === 2 ? 'TWO' : group.length === 3 ? 'THREE' : group.length} answers. ({selected.length} of {group.length} selected)</p>
+        <div className="space-y-2">
+          {opts.map((opt, i) => {
+            const l = letters[i];
+            const on = selected.includes(l);
+            const full = !on && selected.length >= group.length;
+            return (
+              <label key={l} className={`flex items-center gap-3 p-2 rounded-lg border transition-all ${
+                on ? 'border-primary bg-primary/10' : full ? 'border-gray-200 opacity-50 cursor-not-allowed' : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+              }`}>
+                <input type="checkbox" checked={on} disabled={full} onChange={() => toggle(l)} className="w-4 h-4 accent-[#1a3a5f]" />
+                <span className="font-bold">{l}.</span>
+                <span>{opt}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
   const currentQIdx = passageQuestions.findIndex(q => q.order_number === focusedOrderNumber);
   const isPrevDisabled = activePassage === 1 && currentQIdx <= 0;
   const isNextDisabled = activePassage === 3 &&
@@ -553,11 +718,22 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
             <h1 className="text-2xl font-bold text-center mb-8">
               {activePassage === 1 ? test.passage_a_title : activePassage === 2 ? test.passage_b_title : test.passage_c_title}
             </h1>
-            {paragraphs.map((paragraph, i) => (
-              <p key={i} data-paragraph-index={i} className="mb-6 indent-8">
-                {renderHighlightedParagraph(paragraph, highlights[`${activePassage}-${i}`] ?? [])}
-              </p>
-            ))}
+            {paragraphs.map((paragraph, i) => {
+              const sec = paragraph.match(SECTION_MARK)?.[1];
+              const hq = sec ? headingQs.find(q => q.order_number === Number(sec)) : undefined;
+              if (hq) {
+                return (
+                  <div key={i} className="mb-4 mt-2">
+                    <HeadingDropBox q={hq} />
+                  </div>
+                );
+              }
+              return (
+                <p key={i} data-paragraph-index={i} className="mb-6 indent-8">
+                  {renderHighlightedParagraph(paragraph, highlights[`${activePassage}-${i}`] ?? [])}
+                </p>
+              );
+            })}
           </div>
         </div>
 
@@ -577,7 +753,30 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
                 </p>
               );
             })()}
-            {passageQuestions.map((question) => (
+            {passageQuestions.map((question) => {
+              if (question.question_type === 'matching_headings') {
+                if (question.id !== headingQs[0]?.id) return null;
+                return (
+                  <div key={question.id} ref={el => { questionRefs.current[question.id] = el; }}
+                    className="p-4 rounded-xl border bg-blue-50/30 border-blue-100">
+                    <HeadingBank />
+                  </div>
+                );
+              }
+              if (question.question_type === 'multiple_choice_multiple') {
+                const group = groupOf(question);
+                if (question.id !== group[0].id) return null;
+                return (
+                  <div key={question.id} ref={el => { group.forEach(g => { questionRefs.current[g.id] = el; }); }}
+                    onClick={() => setFocusedOrderNumber(question.order_number)}
+                    className={`p-4 rounded-xl border transition-all ${
+                      group.some(g => g.order_number === focusedOrderNumber) ? 'bg-blue-50 border-l-4 border-primary' : 'bg-blue-50/30 border-blue-100 hover:border-blue-200'
+                    }`}>
+                    <MultiChoiceGroup group={group} />
+                  </div>
+                );
+              }
+              return (
               <div
                 key={question.id}
                 ref={el => { questionRefs.current[question.id] = el; }}
@@ -590,39 +789,80 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
               >
                 {renderQuestion(question, question.order_number - 1)}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <footer className="bg-white border-t border-gray-300 p-4 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div />
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleSubmit()}
-              disabled={submitting}
-              className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold transition-colors shadow-sm disabled:opacity-50"
-            >
-              <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
-            </button>
-            <button
-              onClick={() => navigate('prev')}
-              disabled={isPrevDisabled}
-              className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => navigate('next')}
-              disabled={isNextDisabled}
-              className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+      {/* Bottom navigator — Inspera style: one block per passage; the active one expands
+          into question numbers, answered numbers get a green bar, the current one is outlined. */}
+      <footer className="bg-white border-t border-gray-300 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-stretch">
+        <div className="flex-1 flex items-stretch min-w-0">
+          {[1, 2, 3].map((pn) => {
+            const qs = getPassageQuestions(pn);
+            const done = qs.filter(isAnswered).length;
+            const active = pn === activePassage;
+            const complete = qs.length > 0 && done === qs.length;
+            return (
+              <div key={pn} className={`flex items-center min-w-0 ${active ? 'flex-[3]' : 'flex-1'} border-r border-gray-100 last:border-r-0`}>
+                <button
+                  onClick={() => goTo(pn, qs[0]?.order_number)}
+                  className={`flex items-center gap-2 px-5 h-full shrink-0 transition-colors ${active ? 'font-bold text-gray-900' : 'text-gray-700 hover:bg-gray-50'}`}
+                >
+                  {complete && <Check className="w-4 h-4 text-green-600" />}
+                  <span>Passage {pn}</span>
+                  {!active && <span className="text-gray-500 font-normal text-sm ml-1">{done} of {qs.length}</span>}
+                </button>
+                {active && (
+                  <div className="flex items-center gap-0.5 overflow-x-auto py-2 pr-3">
+                    {qs.map((q) => {
+                      const answered = isAnswered(q);
+                      const current = focusedOrderNumber === q.order_number;
+                      return (
+                        <button
+                          key={q.id}
+                          onClick={() => goTo(pn, q.order_number)}
+                          title={answered ? `Question ${q.order_number} — answered` : `Question ${q.order_number}`}
+                          className={`relative min-w-[30px] h-9 px-1 text-sm rounded transition-colors ${
+                            current ? 'border-2 border-[#1a3a5f] font-bold text-[#1a3a5f]' : 'border-2 border-transparent text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <span className={`absolute left-1 right-1 -top-2 h-1 rounded-full ${answered ? 'bg-green-600' : 'bg-gray-200'}`} />
+                          {q.order_number}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2 px-4 border-l border-gray-200 shrink-0">
+          <button
+            onClick={() => navigate('prev')}
+            disabled={isPrevDisabled}
+            className="w-10 h-10 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Previous question"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => navigate('next')}
+            disabled={isNextDisabled}
+            className="w-10 h-10 flex items-center justify-center bg-[#1a3a5f] hover:bg-[#244b78] text-white rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Next question"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => handleSubmit()}
+            disabled={submitting}
+            className="flex items-center gap-2 px-5 h-10 ml-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold transition-colors shadow-sm disabled:opacity-50"
+          >
+            <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
+          </button>
         </div>
       </footer>
 

@@ -184,8 +184,11 @@ class MockSectionSubmitView(APIView):
                 user_ans = ans['user_answer'].strip().lower()
                 accepted = [c.strip().lower() for c in q.correct_answer.split(',')]
                 if q.question_type == 'multiple_choice_multiple':
-                    # "B,D" — order-independent comparison
-                    ok = sorted(a.strip() for a in user_ans.split(',') if a.strip()) == sorted(accepted)
+                    # Choose-TWO groups: each question number holds one letter and scores
+                    # if that letter is one of the correct ones (IELTS marking). A typed
+                    # "B,D" (old text-box style) must match the whole set.
+                    picked = [a.strip() for a in user_ans.split(',') if a.strip()]
+                    ok = (len(picked) == 1 and picked[0] in accepted) or (len(picked) > 1 and sorted(picked) == sorted(accepted))
                 else:
                     ok = bool(user_ans) and user_ans in accepted
                 raw += int(ok)
