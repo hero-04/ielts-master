@@ -32,6 +32,7 @@ interface Result {
   writing_band: string | null;
   overall_estimate: number | null;
   answers: AnswerRow[];
+  listening_transcript: string;
 }
 
 export default function MockResultPage() {
@@ -121,6 +122,19 @@ export default function MockResultPage() {
               </div>
             );
           })()}
+
+          {open === "listening" && r.listening_transcript && (
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-8">
+              <div className="px-6 py-3 border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">Listening — transcript</div>
+              <div className="p-6 max-h-[600px] overflow-y-auto text-sm leading-relaxed text-gray-800 space-y-3">
+                {r.listening_transcript.split(/\n{2,}/).map((para, i) =>
+                  /^Part (one|two|three|four)\b/i.test(para)
+                    ? <p key={i} className="font-bold text-gray-900 pt-3">{para}</p>
+                    : <p key={i} className="whitespace-pre-line">{para}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {open === "writing" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

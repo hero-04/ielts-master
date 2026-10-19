@@ -28,11 +28,11 @@ from .serializers import (
     ObjectiveSubmitSerializer, WritingSubmitSerializer, attempt_status,
 )
 
-# Hard server-side caps (seconds). Listening: 30-min recording + 2-min review,
-# with a little slack for buffering. Reading/Writing: 60 min, no extra time.
-TIME_LIMITS = {'listening': 40 * 60, 'reading': 60 * 60, 'writing': 60 * 60}
+# Hard server-side caps (seconds). Listening: 30 min — the recording already contains the
+# 2-minute check time at the end. Reading/Writing: 60 min, no extra time.
+TIME_LIMITS = {'listening': 30 * 60, 'reading': 60 * 60, 'writing': 60 * 60}
 GRACE = 90  # seconds of leniency for network delay on auto-submit
-REVIEW_SECONDS = 2 * 60
+REVIEW_SECONDS = 5  # after the recording ends, answers are handed in 5 s later
 
 
 def _my_attempt(request, mock):

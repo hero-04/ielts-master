@@ -144,6 +144,7 @@ class MockResultSerializer(serializers.ModelSerializer):
     answers = serializers.SerializerMethodField()
     sections = serializers.SerializerMethodField()
     overall_estimate = serializers.SerializerMethodField()
+    listening_transcript = serializers.CharField(source='mock.listening_transcript', read_only=True)
 
     class Meta:
         model = MockAttempt
@@ -151,7 +152,7 @@ class MockResultSerializer(serializers.ModelSerializer):
             'id', 'mock_number', 'started_at', 'completed_at', 'sections',
             'listening_raw', 'listening_band', 'reading_raw', 'reading_band',
             'task1_text', 'task2_text', 'task1_words', 'task2_words', 'writing_band',
-            'overall_estimate', 'answers',
+            'overall_estimate', 'listening_transcript', 'answers',
         ]
 
     def get_sections(self, obj):

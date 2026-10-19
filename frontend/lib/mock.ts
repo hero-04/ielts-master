@@ -22,7 +22,7 @@ export const SECTION_INFO: Record<MockSection, { title: string; time: string; no
   listening: {
     title: "Listening",
     time: "Listening test will take no more than 30 minutes",
-    note: "The recording plays once. You get 2 minutes at the end to check your answers.",
+    note: "The recording plays once and includes 2 minutes at the end to check your answers. The test closes automatically when it ends.",
   },
   reading: {
     title: "Reading",
