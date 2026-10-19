@@ -6,7 +6,7 @@
  * when the block has a word bank). Inputs are mounted into the HTML with React portals,
  * so the layout is pure HTML/CSS while answers stay in React state like every other question.
  */
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 export interface QuestionBlockData {
@@ -38,25 +38,24 @@ export default function QuestionBlock({ block, questionIdFor, answers, setAnswer
   const [slots, setSlots] = useState<{ n: number; el: HTMLElement }[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
   const hasBank = block.word_bank.length > 0;
+  // drop boxes are as wide as the longest option, like the real test
+  const longest = Math.max(0, ...block.word_bank.map((o) => textOf(o).length));
+  const dropWidth = `${Math.min(26, Math.max(7, longest * 0.55 + 2))}em`;
 
   const html = useMemo(
     () => block.content.replace(GAP_RE, '<span class="gap-slot" data-gap="$1"></span>'),
     [block.content]
   );
 
+  // The HTML is written into the host by hand (not via dangerouslySetInnerHTML) so React never
+  // re-applies it on a re-render — that would replace the gap spans and orphan the portals.
   useLayoutEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    host.innerHTML = html;
     const els = Array.from(host.querySelectorAll<HTMLElement>("[data-gap]"));
     setSlots(els.map((el) => ({ n: Number(el.dataset.gap), el })));
   }, [html]);
-
-  // Scroll the gap into view when it is selected from the bottom navigator.
-  useEffect(() => {
-    if (focusedNumber == null) return;
-    const s = slots.find((x) => x.n === focusedNumber);
-    s?.el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [focusedNumber, slots]);
 
   const gapNumbers = slots.map((s) => s.n);
   const used = new Set(
@@ -105,6 +104,7 @@ export default function QuestionBlock({ block, questionIdFor, answers, setAnswer
         onDrop={(e) => { e.preventDefault(); const l = e.dataTransfer.getData("text/plain"); if (l) place(n, l); }}
         onClick={() => (picked ? place(n, picked) : onFocusNumber?.(n))}
         className={`gap-drop ${val ? "gap-filled" : ""} ${picked && !val ? "gap-ready" : ""} ${focused ? "gap-focused" : ""}`}
+        style={{ minWidth: dropWidth }}
       >
         {val ? (
           <>
@@ -118,36 +118,38 @@ export default function QuestionBlock({ block, questionIdFor, answers, setAnswer
     );
   };
 
+  const bank = hasBank && (
+    <div className="flex flex-col items-start gap-2 lg:sticky lg:top-2">
+      {block.word_bank.map((o) => {
+        const l = letterOf(o);
+        if (used.has(l)) return null;
+        return (
+          <span
+            key={l}
+            draggable
+            onDragStart={(e) => e.dataTransfer.setData("text/plain", l)}
+            onClick={() => setPicked(picked === l ? null : l)}
+            className={`px-3 py-1.5 rounded border text-[0.95em] cursor-grab active:cursor-grabbing select-none transition-colors ${
+              picked === l ? "border-[#1a3a5f] bg-[#1a3a5f] text-[#ffffff]" : "border-gray-400 bg-white hover:border-[#1a3a5f]"
+            }`}
+          >
+            {textOf(o)}
+          </span>
+        );
+      })}
+      {used.size >= block.word_bank.length && <span className="text-xs text-gray-400">All options placed.</span>}
+    </div>
+  );
+
   return (
     <div className="space-y-3">
       {block.title && <p className="font-bold">{block.title}</p>}
-      {block.instructions && <p className="text-sm text-gray-700 whitespace-pre-line">{block.instructions}</p>}
-      <div ref={hostRef} className="exam-html" dangerouslySetInnerHTML={{ __html: html }} />
+      {block.instructions && <p className="text-gray-800 whitespace-pre-line">{block.instructions}</p>}
+      <div className={hasBank ? "grid grid-cols-1 lg:grid-cols-[minmax(0,auto)_minmax(180px,1fr)] gap-x-12 gap-y-4 items-start pt-2" : "pt-1"}>
+        <div ref={hostRef} className="exam-html" />
+        {bank}
+      </div>
       {slots.map((s) => createPortal(renderGap(s.n), s.el, `gap-${block.id}-${s.n}`))}
-      {hasBank && (
-        <div className="rounded-xl border border-gray-200 bg-white p-3">
-          <div className="flex flex-wrap gap-2">
-            {block.word_bank.map((o) => {
-              const l = letterOf(o);
-              if (used.has(l)) return null;
-              return (
-                <span
-                  key={l}
-                  draggable
-                  onDragStart={(e) => e.dataTransfer.setData("text/plain", l)}
-                  onClick={() => setPicked(picked === l ? null : l)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm cursor-grab active:cursor-grabbing select-none transition-colors ${
-                    picked === l ? "border-[#1a3a5f] bg-[#1a3a5f] text-[#ffffff]" : "border-gray-300 bg-gray-50 hover:border-[#1a3a5f]"
-                  }`}
-                >
-                  {textOf(o)}
-                </span>
-              );
-            })}
-            {used.size >= block.word_bank.length && <span className="text-xs text-gray-400">All options placed.</span>}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

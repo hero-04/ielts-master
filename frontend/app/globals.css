@@ -93,10 +93,16 @@ body {
 /* notes / form: a bordered box */
 .exam-html .notes, .exam-html .form { border: 1px solid #9ca3af; padding: 14px 18px; background: #fff; }
 /* flow-chart: stacked boxes joined by arrows */
-.exam-html .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.exam-html .flow { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
 .exam-html .flow > .box { border: 1.5px solid #374151; background: #fff; padding: 8px 14px; width: min(100%, 520px); text-align: center; }
 .exam-html .flow > .box + .box { margin-top: 28px; position: relative; }
-.exam-html .flow > .box + .box::before { content: "↓"; position: absolute; top: -27px; left: 50%; transform: translateX(-50%); font-size: 20px; line-height: 26px; color: #374151; }
+.exam-html .flow > .box { text-align: left; }
+.exam-html .flow > .box + .box { margin-top: 32px; }
+.exam-html .flow > .box + .box::before { content: ""; position: absolute; top: -29px; left: 50%; width: 4px; height: 15px; background: #111827; transform: translateX(-50%); }
+.exam-html .flow > .box + .box::after { content: ""; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 11px solid #111827; }
+/* gaps on a map are smaller so they fit the plan */
+.exam-html .map .gap-drop { min-width: 0 !important; width: 9em; font-size: 0.85em; background: #fff; }
+.exam-html .map .gap-input { width: 7em; }
 /* map / diagram: image with gaps placed by percentage — <span class="pin" style="left:30%;top:40%">[[15]]</span> */
 .exam-html .map { position: relative; display: inline-block; max-width: 100%; }
 .exam-html .map img { display: block; max-width: 100%; }

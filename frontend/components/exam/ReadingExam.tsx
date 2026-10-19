@@ -706,9 +706,9 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
         </div>
         
         <div className="flex items-center gap-6">
-          <div className={`flex items-center gap-2 font-mono text-xl font-bold bg-black/20 px-4 py-1.5 rounded ${timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
-            <Clock className="w-5 h-5" />
-            {formatTime(timeLeft)}
+          <div className={`flex items-center gap-2 tabular-nums text-base font-semibold ${timeLeft < 300 ? 'text-[#fca5a5]' : 'text-[#ffffff]'}`}>
+            <Clock className="w-4 h-4" />
+            {formatTime(timeLeft)} left
           </div>
           <div className="flex items-center gap-4 text-sm">
             <button 

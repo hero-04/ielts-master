@@ -33,6 +33,8 @@ export default function MockLobbyPage() {
   const startSection = async (section: MockSection) => {
     if (!mock) return;
     setBusy(section);
+    // Like the real computer-delivered test: the exam runs full screen (ignored if the browser refuses).
+    try { if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {}); } catch {}
     try {
       if (!mock.my_status.started) await api.post(`/mock/${mockId}/start/`);
       router.push(`/mock/${mockId}/${section}`);

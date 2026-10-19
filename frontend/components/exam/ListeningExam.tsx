@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { useVolume } from "@/lib/volume";
 import type { ExamSource } from "./types";
 import QuestionBlock, { type QuestionBlockData } from "./QuestionBlock";
-import { Clock, Headphones, CheckSquare, Play } from "lucide-react";
+import { Clock, Headphones, CheckSquare, Play, Check, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 import Link from "next/link";
 
 interface ListeningQuestion {
@@ -41,7 +41,10 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
   const [timeLeft, setTimeLeft] = useState(40 * 60);
   // Exam mode (mock): the recording plays once; when it ends a short review period starts.
   const [reviewSeconds, setReviewSeconds] = useState(2 * 60);
-  const [phase, setPhase] = useState<'ready' | 'playing' | 'review'>('ready');
+  const [phase, setPhase] = useState<'ready' | 'blocked' | 'playing' | 'review'>('ready');
+  const [activePart, setActivePart] = useState(1);
+  const [focusedNumber, setFocusedNumber] = useState<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { volume } = useVolume();
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -142,8 +145,17 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
   const startRecording = () => {
     const el = audioRef.current;
     if (!el) return;
-    el.play().then(() => setPhase('playing')).catch(() => alert("Could not start the recording. Check your speakers and click Play again."));
+    el.play().then(() => setPhase('playing')).catch(() => setPhase('blocked'));
   };
+
+  // Exam mode: the recording starts by itself as soon as the section opens (the student already
+  // pressed Start in the lobby). If the browser blocks autoplay, a single "Start audio" button appears.
+  useEffect(() => {
+    if (!source.exam || !test?.audio_url || phase !== 'ready') return;
+    const t = setTimeout(startRecording, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [test, source.exam]);
 
   const renderQuestion = (question: ListeningQuestion, idx: number) => {
     // Drag & Drop — inline drop zone + word bank
@@ -256,33 +268,26 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
     const isFormCompletion = question.question_type === 'form_completion' || question.question_type === 'table_completion' || question.question_type === 'short_answer';
 
     if (question.question_type === 'multiple_choice') {
-      const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+      // Inspera style: number in a bordered square, full-width radio rows, selected row light blue
+      const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
       const opts = question.options || [];
-
       return (
         <div>
-          <p className="font-medium text-gray-900 mb-3">
-            {idx + 1}. {question.question_text}
+          <p className="text-gray-900 mb-2 flex items-start gap-2">
+            <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-1 border border-gray-500 rounded-sm font-bold text-sm">{question.order_number}</span>
+            <span className="pt-0.5">{question.question_text}</span>
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+          <div className="space-y-1">
             {opts.map((option, optIdx) => {
               const letter = letters[optIdx];
               const isSelected = answers[`${question.id}`] === letter;
-
               return (
-                <button
-                  key={optIdx}
-                  onClick={() => handleAnswerChange(question.id, letter)}
-                  className={`p-3 text-left border rounded-lg ${
-                    isSelected
-                      ? "border-purple-600 bg-purple-50 text-purple-700 ring-2 ring-purple-200 opacity-100"
-                      : "border-gray-200 bg-white text-gray-900 opacity-100 hover:border-purple-300 hover:bg-gray-50"
-                  }`}
-                  style={{ opacity: 1, transition: "none" }}
-                >
-                  <span className="font-bold mr-2 text-inherit">{letter}.</span>
-                  <span className="text-inherit">{option}</span>
-                </button>
+                <label key={optIdx}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded cursor-pointer ${isSelected ? 'bg-[#bbd7f0]' : 'hover:bg-gray-100'}`}>
+                  <input type="radio" name={`q-${question.id}`} checked={isSelected}
+                    onChange={() => handleAnswerChange(question.id, letter)} className="w-4 h-4 accent-[#1a3a5f]" />
+                  <span>{option}</span>
+                </label>
               );
             })}
           </div>
@@ -461,171 +466,210 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
     );
   }
 
+  const parts = [1, 2, 3, 4].filter(p => (test.questions || []).some(q => q.section === p));
+  const partQs = (p: number) => (test.questions || []).filter(q => q.section === p).sort((a, b) => a.order_number - b.order_number);
+  const isAnswered = (q: ListeningQuestion) => {
+    if ((answers[`${q.id}`] || '').trim()) return true;
+    const suffix = `_${q.order_number}`;
+    return Object.entries(answers).some(([k, v]) => k.includes('_') && k.endsWith(suffix) && (v || '').trim() !== '');
+  };
+  const goTo = (p: number, n?: number) => {
+    if (p !== activePart) { setActivePart(p); scrollRef.current?.scrollTo({ top: 0 }); }
+    if (n !== undefined) {
+      setFocusedNumber(n);
+      setTimeout(() => {
+        const el = document.querySelector(`[data-q="${n}"]`) as HTMLElement | null
+          ?? (document.querySelector(`[data-gap="${n}"]`) as HTMLElement | null);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+  };
+  const allNumbers = parts.flatMap(p => partQs(p).map(q => ({ p, n: q.order_number })));
+  const curIdx = allNumbers.findIndex(x => x.n === focusedNumber);
+  const step = (d: 1 | -1) => {
+    const next = allNumbers[curIdx === -1 ? 0 : Math.min(Math.max(curIdx + d, 0), allNumbers.length - 1)];
+    if (next) goTo(next.p, next.n);
+  };
+
+  const renderPart = (section: number) => {
+    const qs = partQs(section);
+    const first = qs[0]?.order_number, last = qs[qs.length - 1]?.order_number;
+    const grouped: Array<ListeningQuestion | ListeningQuestion[] | QuestionBlockData> = [];
+    const seenBlocks = new Set<number>();
+    let i = 0;
+    while (i < qs.length) {
+      const q = qs[i];
+      if (q.group) {
+        if (!seenBlocks.has(q.group)) {
+          seenBlocks.add(q.group);
+          const b = test.groups?.find(g => g.id === q.group);
+          if (b) grouped.push(b);
+        }
+        i++;
+        continue;
+      }
+      if (q.question_type === 'matching' && q.question_group) {
+        const group: ListeningQuestion[] = [q];
+        let j = i + 1;
+        while (j < qs.length && qs[j].question_type === 'matching' && qs[j].question_group === q.question_group) { group.push(qs[j]); j++; }
+        grouped.push(group);
+        i = j;
+      } else { grouped.push(q); i++; }
+    }
+    // consecutive plain questions (e.g. MCQ 31–32) get one "Questions x–y" heading
+    const out: ReactNode[] = [];
+    let k = 0;
+    while (k < grouped.length) {
+      const item = grouped[k];
+      if (!Array.isArray(item) && 'content' in item) {
+        out.push(
+          <section key={`block-${item.id}`}>
+            <QuestionBlock
+              block={item}
+              questionIdFor={(n) => qs.find(x => x.order_number === n)?.id}
+              answers={answers}
+              setAnswer={(qid, v) => handleAnswerChange(qid, v)}
+              focusedNumber={focusedNumber}
+              onFocusNumber={(n) => setFocusedNumber(n)}
+            />
+          </section>
+        );
+        k++; continue;
+      }
+      if (Array.isArray(item)) {
+        out.push(<section key={`m-${item[0].id}`}>{renderMatchingTable(item)}</section>);
+        k++; continue;
+      }
+      const run: ListeningQuestion[] = [];
+      while (k < grouped.length && !Array.isArray(grouped[k]) && !('content' in (grouped[k] as object))) { run.push(grouped[k] as ListeningQuestion); k++; }
+      out.push(
+        <section key={`run-${run[0].id}`} className="space-y-6">
+          <div>
+            <p className="font-bold">Questions {run[0].order_number}{run.length > 1 ? `–${run[run.length - 1].order_number}` : ''}</p>
+            {run.every(r => r.question_type === 'multiple_choice') && <p className="text-sm text-gray-700 mt-1">Choose the correct answer.</p>}
+          </div>
+          {run.map(q => (
+            <div key={q.id} data-q={q.order_number} onClick={() => setFocusedNumber(q.order_number)}
+              className={`rounded-lg p-3 -m-3 ${focusedNumber === q.order_number ? 'bg-blue-50/60' : ''}`}>
+              {renderQuestion(q, q.order_number)}
+            </div>
+          ))}
+        </section>
+      );
+    }
+    return (
+      <div className="space-y-10">
+        <div className="bg-[#f1f1ec] border border-gray-300 rounded px-5 py-3">
+          <p className="font-bold">Part {section}</p>
+          <p className="text-gray-700">Listen and answer questions {first}–{last}.</p>
+        </div>
+        {out}
+      </div>
+    );
+  };
+
+  const statusText = !source.exam ? null
+    : phase === 'playing' ? 'Audio is playing'
+    : phase === 'review' ? `Review time ${formatTime(reviewSeconds)}`
+    : phase === 'blocked' ? 'Audio waiting to start'
+    : 'Starting audio…';
+
   return (
-    <div className="h-screen overflow-hidden bg-white flex flex-col font-sans">
+    <div className="h-screen overflow-hidden bg-white flex flex-col font-sans text-gray-900">
       {/* Header */}
-      <header className="bg-[#1a3a5f] text-white flex items-center justify-between px-6 py-3 shrink-0 shadow-md z-10">
+      <header className="bg-[#1a3a5f] text-[#ffffff] flex items-center justify-between px-6 h-14 shrink-0 shadow-md z-10">
         <div className="flex items-center gap-4">
           <div className="font-bold text-xl tracking-wide">IELTS</div>
-          <div className="h-6 w-[1px] bg-white/30" />
+          <div className="h-6 w-[1px] bg-[#ffffff4d]" />
           <div className="text-sm">Listening</div>
-          <div className="h-6 w-[1px] bg-white/30" />
-          <div className="text-sm text-gray-300">
+          <div className="h-6 w-[1px] bg-[#ffffff4d]" />
+          <div className="text-sm text-[#cbd5e1]">
             {(test as any).mock_number ? `Mock ${(test as any).mock_number}` : source.subtitle ?? `Book ${test.book_number} • Test ${test.test_number}`}
           </div>
+          {statusText && (
+            <div className="flex items-center gap-2 text-sm text-[#cbd5e1] ml-2">
+              <Volume2 className="w-4 h-4" /> {statusText}
+            </div>
+          )}
         </div>
-        <div className={`flex items-center gap-2 font-mono text-xl font-bold bg-black/20 px-4 py-1.5 rounded ${timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
-          <Clock className="w-5 h-5" />
-          {formatTime(timeLeft)}
+        <div className={`flex items-center gap-2 tabular-nums text-base font-semibold ${timeLeft < 300 ? 'text-[#fca5a5]' : 'text-[#ffffff]'}`}>
+          <Clock className="w-4 h-4" /> {formatTime(timeLeft)} left
         </div>
       </header>
 
-      {/* Main — two panels */}
-      <main className="flex-1 flex overflow-hidden bg-[#f0f2f5]">
-
-        {/* Left Panel: Questions */}
-        <div className="flex-1 flex flex-col border-r border-gray-300 bg-white m-2 rounded-xl shadow-sm overflow-hidden">
-          <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0">
-            <h2 className="font-bold text-gray-800">Questions</h2>
-          </div>
-          <div className="flex-1 p-8 overflow-y-auto">
-            {[1, 2, 3, 4].map((section) => {
-              const qs = test.questions?.filter(q => q.section === section) || [];
-              if (qs.length === 0) return null;
-              return (
-                <div key={section}>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 border-l-4 border-purple-600 pl-3">
-                    Section {section}
-                  </h3>
-                  <div className="space-y-6 mb-8">
-                    {(() => {
-                      const grouped: Array<ListeningQuestion | ListeningQuestion[] | QuestionBlockData> = [];
-                      const seenBlocks = new Set<number>();
-                      let i = 0;
-                      while (i < qs.length) {
-                        const q = qs[i];
-                        if (q.group) {
-                          // question block: render the whole block once, at its first question
-                          if (!seenBlocks.has(q.group)) {
-                            seenBlocks.add(q.group);
-                            const b = test.groups?.find(g => g.id === q.group);
-                            if (b) grouped.push(b);
-                          }
-                          i++;
-                          continue;
-                        }
-                        if (q.question_type === 'matching' && q.question_group) {
-                          const group: ListeningQuestion[] = [q];
-                          let j = i + 1;
-                          while (j < qs.length && qs[j].question_type === 'matching' && qs[j].question_group === q.question_group) {
-                            group.push(qs[j]);
-                            j++;
-                          }
-                          grouped.push(group);
-                          i = j;
-                        } else {
-                          grouped.push(q);
-                          i++;
-                        }
-                      }
-                      return grouped.map((item) => {
-                        if (!Array.isArray(item) && 'content' in item) {
-                          return (
-                            <div key={`block-${item.id}`} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
-                              <QuestionBlock
-                                block={item}
-                                questionIdFor={(n) => qs.find(x => x.order_number === n)?.id}
-                                answers={answers}
-                                setAnswer={(qid, v) => handleAnswerChange(qid, v)}
-                              />
-                            </div>
-                          );
-                        }
-                        if (Array.isArray(item)) {
-                          return (
-                            <div key={`group-${item[0].question_group}-${item[0].id}`} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
-                              {renderMatchingTable(item)}
-                            </div>
-                          );
-                        }
-                        return (
-                          <div key={item.id} className="p-5 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
-                            {renderQuestion(item, qs.indexOf(item) + 1)}
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
-              );
-            })}
+      {/* Audio */}
+      {test.audio_url && source.exam && (
+        <audio ref={audioRef} className="hidden" onEnded={() => setPhase('review')} preload="auto">
+          <source src={test.audio_url} type="audio/mpeg" />
+        </audio>
+      )}
+      {source.exam && phase === 'blocked' && (
+        <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-8 max-w-md text-center shadow-2xl">
+            <Headphones className="w-10 h-10 mx-auto mb-3 text-[#1a3a5f]" />
+            <p className="font-bold text-lg mb-2">Put your headphones on</p>
+            <p className="text-sm text-gray-600 mb-5">Your browser needs one click before it plays sound. The recording plays once and cannot be paused.</p>
+            <button onClick={startRecording} className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#1a3a5f] text-[#ffffff] rounded font-bold hover:bg-[#244b78]">
+              <Play className="w-4 h-4" /> Start audio
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Right Panel: Audio player */}
-        <div className="flex-1 flex flex-col bg-white m-2 rounded-xl shadow-sm overflow-hidden ml-0">
-          <div className="bg-gray-100 px-6 py-3 border-b border-gray-200 shrink-0">
-            <h2 className="font-bold text-gray-800">Audio Player</h2>
-          </div>
-          <div className="flex-1 p-8 overflow-y-auto">
-            {test.audio_url && source.exam ? (
-              <div className="p-5 bg-gray-100 rounded-xl border border-gray-200 space-y-4">
-                <audio ref={audioRef} className="hidden" onEnded={() => setPhase('review')} preload="auto">
-                  <source src={test.audio_url} type="audio/mpeg" />
-                </audio>
-                {phase === 'ready' && (
-                  <>
-                    <p className="text-sm text-gray-700">
-                      The recording plays <strong>once</strong> and cannot be paused or replayed, exactly as in the real test.
-                      Put your headphones on, then click Play.
-                    </p>
-                    <button onClick={startRecording}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a5f] text-white rounded font-bold hover:bg-[#244b78] transition-colors">
-                      <Play className="w-4 h-4" /> Play recording
-                    </button>
-                  </>
-                )}
-                {phase === 'playing' && (
-                  <div className="flex items-center gap-3 text-sm text-gray-700">
-                    <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>
-                    Recording is playing… answer as you listen.
-                  </div>
-                )}
-                {phase === 'review' && (
-                  <div className="text-sm text-gray-800">
-                    <p className="font-bold mb-1">The recording has finished.</p>
-                    <p>You have <span className="font-mono font-bold">{formatTime(reviewSeconds)}</span> to check your answers. Your answers are submitted automatically when the time is up.</p>
-                  </div>
-                )}
-              </div>
-            ) : test.audio_url ? (
-              <div className="p-4 bg-gray-100 rounded-xl border border-gray-200">
-                <audio ref={audioRef} controls className="w-full">
-                  <source src={test.audio_url} type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-24 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                <div className="text-center text-gray-400">
-                  <Headphones className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-sm">No audio available</p>
-                </div>
-              </div>
-            )}
-          </div>
+      {/* Questions — one part at a time, full width */}
+      <main ref={scrollRef} className="flex-1 overflow-y-auto bg-white">
+        <div className="max-w-6xl px-8 py-6">
+          {!source.exam && test.audio_url && (
+            <div className="mb-6 p-3 bg-gray-100 rounded-xl border border-gray-200">
+              <audio ref={audioRef} controls className="w-full"><source src={test.audio_url} type="audio/mpeg" /></audio>
+            </div>
+          )}
+          {parts.includes(activePart) ? renderPart(activePart) : null}
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-300 p-4 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div />
-          <button
-            onClick={() => handleSubmit()}
-            disabled={submitting || (source.exam && phase === 'ready')}
-            className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold transition-colors shadow-sm disabled:opacity-50"
-          >
+      {/* Bottom navigator */}
+      <footer className="bg-white border-t border-gray-300 shrink-0 flex items-stretch h-16">
+        <div className="flex-1 flex items-stretch min-w-0">
+          {parts.map((p) => {
+            const qs = partQs(p);
+            const done = qs.filter(isAnswered).length;
+            const active = p === activePart;
+            return (
+              <div key={p} className={`flex items-center min-w-0 ${active ? 'flex-[3]' : 'flex-1'}`}>
+                <button onClick={() => goTo(p)} className={`flex items-center gap-2 px-5 h-full shrink-0 ${active ? 'font-bold' : 'text-gray-700 hover:bg-gray-50'}`}>
+                  {qs.length > 0 && done === qs.length && <Check className="w-4 h-4 text-green-600" />}
+                  <span>Part {p}</span>
+                  {!active && <span className="text-gray-500 font-normal text-sm ml-1">{done} of {qs.length}</span>}
+                </button>
+                {active && (
+                  <div className="flex items-center gap-0.5 overflow-x-auto py-2 pr-3">
+                    {qs.map((q) => {
+                      const ans = isAnswered(q);
+                      const cur = focusedNumber === q.order_number;
+                      return (
+                        <button key={q.id} onClick={() => goTo(p, q.order_number)}
+                          className={`relative min-w-[30px] h-9 px-1 text-sm rounded ${cur ? 'border-2 border-[#1a3a5f] font-bold text-[#1a3a5f]' : 'border-2 border-transparent text-gray-700 hover:bg-gray-100'}`}>
+                          <span className={`absolute left-1 right-1 -top-2 h-1 rounded-full ${ans ? 'bg-green-600' : 'bg-gray-200'}`} />
+                          {q.order_number}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2 px-4 border-l border-gray-200 shrink-0">
+          <button onClick={() => step(-1)} className="w-10 h-10 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 rounded" title="Previous question">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button onClick={() => step(1)} className="w-10 h-10 flex items-center justify-center bg-[#1a3a5f] hover:bg-[#244b78] text-[#ffffff] rounded" title="Next question">
+            <ChevronRight className="w-5 h-5" />
+          </button>
+          <button onClick={() => handleSubmit()} disabled={submitting}
+            className="flex items-center gap-2 px-5 h-10 ml-2 bg-green-600 hover:bg-green-700 text-[#ffffff] rounded font-bold disabled:opacity-50">
             <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
           </button>
         </div>
