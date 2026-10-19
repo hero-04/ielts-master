@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { Clock, CheckSquare, Settings } from "lucide-react";
+import { useExamLock } from "@/components/exam/useExamLock";
+import { Clock, Settings } from "lucide-react";
 
 interface WritingSection {
   mock_number: number;
@@ -33,6 +34,7 @@ export default function MockWritingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [savedAt, setSavedAt] = useState<string>("");
   const dirty = useRef(false);
+  useExamLock(true);
 
   useEffect(() => {
     api.get(`/mock/${mockId}/section/writing/`)
@@ -186,13 +188,9 @@ export default function MockWritingPage() {
               </button>
             ))}
           </div>
-          <button
-            onClick={() => submit()}
-            disabled={submitting}
-            className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold transition-colors shadow-sm disabled:opacity-50"
-          >
-            <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
-          </button>
+          <span className="text-sm text-gray-500">
+            {submitting ? "Submitting…" : "Your answers are submitted automatically when the time is up."}
+          </span>
         </div>
       </footer>
     </div>

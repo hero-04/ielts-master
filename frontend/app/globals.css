@@ -120,3 +120,5 @@ body {
 .exam-html .gap-clear { color: #9ca3af; font-size: 0.8em; background: none; border: 0; padding: 0; cursor: pointer; }
 .exam-html .gap-clear:hover { color: #ef4444; }
 .exam-html table.plain, .exam-html table.plain td, .exam-html table.plain th { border: 0; background: transparent; padding: 4px 18px 4px 0; }
+/* text highlighting in exam screens (click a highlight to remove it) */
+mark.exam-hl { background: #fde68a; color: inherit; padding: 0; border-radius: 2px; cursor: pointer; }

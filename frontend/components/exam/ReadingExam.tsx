@@ -7,6 +7,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import type { ExamSource } from "./types";
 import QuestionBlock, { type QuestionBlockData } from "./QuestionBlock";
+import { useExamLock } from "./useExamLock";
 
 interface ReadingQuestion {
   id: number;
@@ -35,6 +36,7 @@ interface ReadingTest {
 
 export default function ReadingExam({ source }: { source: ExamSource }) {
   const testId = source.storageKey;
+  useExamLock(!!source.exam);
 
   const [test, setTest] = useState<ReadingTest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -905,6 +907,7 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
           >
             <ChevronRight className="w-5 h-5" />
           </button>
+{!source.exam && (
           <button
             onClick={() => handleSubmit()}
             disabled={submitting}
@@ -912,6 +915,7 @@ export default function ReadingExam({ source }: { source: ExamSource }) {
           >
             <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
           </button>
+          )}
         </div>
       </footer>
 

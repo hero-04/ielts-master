@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 import { useVolume } from "@/lib/volume";
 import type { ExamSource } from "./types";
 import QuestionBlock, { type QuestionBlockData } from "./QuestionBlock";
+import { useExamLock } from "./useExamLock";
+import { useHighlighter } from "./useHighlighter";
 import { Clock, Headphones, CheckSquare, Play, Check, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 import Link from "next/link";
 
@@ -45,6 +47,8 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
   const [activePart, setActivePart] = useState(1);
   const [focusedNumber, setFocusedNumber] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hl = useHighlighter();
+  useExamLock(!!source.exam);
   const { volume } = useVolume();
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -630,14 +634,15 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
       )}
 
       {/* Questions — one part at a time, full width */}
-      <main ref={scrollRef} className="flex-1 overflow-y-auto bg-white">
+      <main ref={scrollRef} onMouseUp={hl.onMouseUp} className="flex-1 overflow-y-auto bg-white">
         <div className="max-w-6xl px-8 py-6">
           {!source.exam && test.audio_url && (
             <div className="mb-6 p-3 bg-gray-100 rounded-xl border border-gray-200">
               <audio ref={audioRef} controls className="w-full"><source src={test.audio_url} type="audio/mpeg" /></audio>
             </div>
           )}
-          {parts.includes(activePart) ? renderPart(activePart) : null}
+          {/* all parts stay mounted (only hidden) so answers' layout and highlights survive switching */}
+          {parts.map(p => <div key={p} className={p === activePart ? '' : 'hidden'}>{renderPart(p)}</div>)}
         </div>
       </main>
 
@@ -681,12 +686,15 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
           <button onClick={() => step(1)} className="w-10 h-10 flex items-center justify-center bg-[#1a3a5f] hover:bg-[#244b78] text-[#ffffff] rounded" title="Next question">
             <ChevronRight className="w-5 h-5" />
           </button>
-          <button onClick={() => handleSubmit()} disabled={submitting}
-            className="flex items-center gap-2 px-5 h-10 ml-2 bg-green-600 hover:bg-green-700 text-[#ffffff] rounded font-bold disabled:opacity-50">
-            <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
-          </button>
+          {!source.exam && (
+            <button onClick={() => handleSubmit()} disabled={submitting}
+              className="flex items-center gap-2 px-5 h-10 ml-2 bg-green-600 hover:bg-green-700 text-[#ffffff] rounded font-bold disabled:opacity-50">
+              <CheckSquare className="w-5 h-5" /> {submitting ? "Submitting..." : "Submit"}
+            </button>
+          )}
         </div>
       </footer>
+      {hl.toolbar}
     </div>
   );
 }
