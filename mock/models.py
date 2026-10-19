@@ -111,7 +111,7 @@ class MockQuestion(models.Model):
 
 
 class MockAttempt(models.Model):
-    """One sitting per student per mock (admins can delete a row to allow a retake)."""
+    """One sitting per student per mock. POST /api/mock/<id>/retake/ deletes it to start over."""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mock_attempts')
     mock = models.ForeignKey(Mock, on_delete=models.CASCADE, related_name='attempts')
     started_at = models.DateTimeField(auto_now_add=True)

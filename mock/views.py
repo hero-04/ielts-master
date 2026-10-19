@@ -8,6 +8,7 @@ Mock test flow:
   POST /api/mock/<id>/section/<name>/submit/
   POST /api/mock/<id>/finish/            close the attempt (all sections done)
   GET  /api/mock/<id>/result/            my result
+  POST /api/mock/<id>/retake/            delete my attempt so I can sit it again
 
 Sections unlock strictly in order: listening → reading → writing. A section that
 has no content yet (e.g. no listening recording) is simply skipped.
@@ -247,3 +248,14 @@ class MockResultView(APIView):
         if attempt is None or attempt.completed_at is None:
             return Response({'detail': 'No completed attempt for this mock.'}, status=404)
         return Response(MockResultSerializer(attempt).data)
+
+
+class MockRetakeView(APIView):
+    """POST /api/mock/<id>/retake/ — wipe my attempt (and its answers) so the mock
+    can be taken again from scratch. Retakes are open to everyone for now."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        mock = get_object_or_404(Mock, pk=pk, is_active=True)
+        MockAttempt.objects.filter(user=request.user, mock=mock).delete()
+        return Response(_lobby_payload(mock, None))

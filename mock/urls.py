@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     MockListView, MockDetailView, MockStartView, MockSectionView,
-    MockSectionSubmitView, MockAutosaveView, MockFinishView, MockResultView,
+    MockSectionSubmitView, MockAutosaveView, MockFinishView, MockResultView, MockRetakeView,
 )
 
 app_name = 'mock'
@@ -15,4 +15,5 @@ urlpatterns = [
     path('<int:pk>/section/<str:section>/submit/', MockSectionSubmitView.as_view(), name='section-submit'),
     path('<int:pk>/finish/', MockFinishView.as_view(), name='finish'),
     path('<int:pk>/result/', MockResultView.as_view(), name='result'),
+    path('<int:pk>/retake/', MockRetakeView.as_view(), name='retake'),
 ]

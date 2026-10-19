@@ -53,6 +53,19 @@ export default function MockLobbyPage() {
     }
   };
 
+  const retake = async () => {
+    if (!confirm("Start this mock again from scratch? Your previous answers and result will be deleted.")) return;
+    setBusy("retake");
+    try {
+      const r = await api.post(`/mock/${mockId}/retake/`);
+      setMock(r.data);
+    } catch (e: any) {
+      alert(e?.response?.data?.detail || "Could not reset this mock.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -95,7 +108,6 @@ export default function MockLobbyPage() {
         <p className="text-gray-600 mb-10 max-w-2xl">
           Take the tests in order. The next test unlocks when you submit the previous one.
           Once you start a test its clock runs, and you cannot return to it after submitting.
-          {!s.completed && " You can sit this mock only once."}
         </p>
 
         {s.sections.length === 0 ? (
@@ -163,6 +175,18 @@ export default function MockLobbyPage() {
               className="px-8 py-3 rounded bg-[#1a3a5f] text-white font-bold hover:bg-[#244b78] transition-colors disabled:opacity-60"
             >
               {s.completed ? "See results" : busy === "finish" ? "Finishing…" : "Finish the test"}
+            </button>
+          </div>
+        )}
+
+        {s.started && (
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={retake}
+              disabled={busy !== null}
+              className="text-sm text-gray-500 hover:text-gray-900 underline underline-offset-4 disabled:opacity-60"
+            >
+              {busy === "retake" ? "Resetting…" : "Retake this mock"}
             </button>
           </div>
         )}
