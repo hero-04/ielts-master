@@ -178,12 +178,11 @@ export default function MockWritingPage() {
               <button
                 key={n}
                 onClick={() => setTask(n as 1 | 2)}
-                className={`px-4 py-2 rounded font-semibold text-sm border transition-colors ${
-                  task === n ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                className={`px-5 py-2 rounded font-semibold text-sm border transition-colors ${
+                  task === n ? "bg-[#1a3a5f] text-white border-[#1a3a5f]" : "bg-white text-[#1a3a5f] border-gray-300 hover:bg-blue-50"
                 }`}
               >
                 Part {n}
-                <span className={`ml-2 text-xs ${task === n ? "text-gray-300" : "text-gray-400"}`}>{countWords(n === 1 ? t1 : t2)} w</span>
               </button>
             ))}
           </div>
