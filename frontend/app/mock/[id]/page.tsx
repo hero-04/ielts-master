@@ -115,12 +115,12 @@ export default function MockLobbyPage() {
                 <div
                   key={section}
                   className={`relative rounded-2xl border-2 p-6 min-h-[300px] flex flex-col ${
-                    done ? "border-green-200 bg-green-50/40" : isNext ? "border-gray-900 bg-white" : "border-gray-200 bg-gray-50"
+                    done ? "border-green-200 bg-green-50/40" : isNext ? "border-[#1a3a5f] bg-white" : "border-gray-200 bg-gray-50"
                   }`}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">{info.time}</p>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${done ? "bg-green-600 text-white" : "bg-gray-900 text-white"}`}>
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${done ? "bg-green-600 text-white" : "bg-[#1a3a5f] text-white"}`}>
                       {done ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                     </div>
                     <div>
@@ -142,7 +142,7 @@ export default function MockLobbyPage() {
                       <button
                         onClick={() => startSection(section)}
                         disabled={locked || busy !== null}
-                        className="px-6 py-2.5 rounded bg-black text-white font-bold text-sm hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className="px-6 py-2.5 rounded bg-[#1a3a5f] text-white font-bold text-sm hover:bg-[#244b78] transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
                       >
                         {busy === section ? "Opening…" : inProgress ? "Resume" : "Start"}
                       </button>
@@ -160,7 +160,7 @@ export default function MockLobbyPage() {
             <button
               onClick={s.completed ? () => router.push(`/mock/${mockId}/result`) : finish}
               disabled={busy === "finish"}
-              className="px-8 py-3 rounded bg-black text-white font-bold hover:bg-gray-800 transition-colors disabled:opacity-60"
+              className="px-8 py-3 rounded bg-[#1a3a5f] text-white font-bold hover:bg-[#244b78] transition-colors disabled:opacity-60"
             >
               {s.completed ? "See results" : busy === "finish" ? "Finishing…" : "Finish the test"}
             </button>

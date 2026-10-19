@@ -4,10 +4,21 @@ from .models import Mock, MockAttempt, MockAnswer, MockQuestion
 
 
 class MockQuestionSerializer(serializers.ModelSerializer):
-    """Question as shown during the exam — no correct answer leaves the server."""
+    """Question as shown during the exam — no correct answer leaves the server.
+    Also exposes `passage` (reading: "A"/"B"/"C") and `section` (listening: 1-4) so the
+    shared practice exam components can group questions exactly as they do for book tests."""
+    passage = serializers.SerializerMethodField()
+    section = serializers.SerializerMethodField()
+
     class Meta:
         model = MockQuestion
-        fields = ['id', 'part', 'question_type', 'question_text', 'options', 'question_group', 'order_number']
+        fields = ['id', 'part', 'passage', 'section', 'question_type', 'question_text', 'options', 'question_group', 'order_number']
+
+    def get_passage(self, obj):
+        return obj.part if obj.section == MockQuestion.Section.READING else None
+
+    def get_section(self, obj):
+        return int(obj.part) if obj.section == MockQuestion.Section.LISTENING and obj.part.isdigit() else None
 
 
 class AnswerInSerializer(serializers.Serializer):

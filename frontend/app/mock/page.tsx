@@ -43,10 +43,10 @@ export default function MockListPage() {
               <Link
                 key={m.id}
                 href={state === "done" ? `/mock/${m.id}/result` : `/mock/${m.id}`}
-                className="group bg-white rounded-2xl border border-gray-200 hover:border-gray-900 hover:shadow-lg transition-all p-6 flex flex-col"
+                className="group bg-white rounded-2xl border border-gray-200 hover:border-[#1a3a5f] hover:shadow-lg transition-all p-6 flex flex-col"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gray-900 text-white flex items-center justify-center font-bold text-lg">
+                  <div className="w-12 h-12 rounded-xl bg-[#1a3a5f] text-white flex items-center justify-center font-bold text-lg">
                     {m.number}
                   </div>
                   {state === "done" && (

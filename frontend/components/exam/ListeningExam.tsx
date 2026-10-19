@@ -554,7 +554,7 @@ export default function ListeningExam({ source }: { source: ExamSource }) {
                       Put your headphones on, then click Play.
                     </p>
                     <button onClick={startRecording}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded font-bold hover:bg-gray-800 transition-colors">
+                      className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a5f] text-white rounded font-bold hover:bg-[#244b78] transition-colors">
                       <Play className="w-4 h-4" /> Play recording
                     </button>
                   </>
