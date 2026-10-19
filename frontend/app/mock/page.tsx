@@ -5,7 +5,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { api } from "@/lib/api";
 import type { MockSummary } from "@/lib/mock";
-import { ClipboardCheck, CheckCircle2, PlayCircle, Lock } from "lucide-react";
+import { ClipboardCheck, CheckCircle2, PlayCircle, Sparkles } from "lucide-react";
 
 export default function MockListPage() {
   const [mocks, setMocks] = useState<MockSummary[]>([]);
@@ -20,7 +20,7 @@ export default function MockListPage() {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Mock Tests</h2>
         <p className="text-gray-600 text-lg">
-          A full exam sitting — Listening, Reading and Writing in one go, under real timing. Each mock can be taken once.
+          A full exam sitting — Listening, Reading and Writing in one go, under real timing.
         </p>
       </div>
 
@@ -42,7 +42,7 @@ export default function MockListPage() {
             return (
               <Link
                 key={m.id}
-                href={state === "done" ? `/mock/${m.id}/result` : `/mock/${m.id}`}
+                href={`/mock/${m.id}`}
                 className="group bg-white rounded-2xl border border-gray-200 hover:border-[#1a3a5f] hover:shadow-lg transition-all p-6 flex flex-col"
               >
                 <div className="flex items-start justify-between mb-4">
@@ -61,7 +61,7 @@ export default function MockListPage() {
                   )}
                   {state === "new" && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
-                      <Lock className="w-3.5 h-3.5" /> One attempt
+                      <Sparkles className="w-3.5 h-3.5" /> New
                     </span>
                   )}
                 </div>
@@ -70,7 +70,7 @@ export default function MockListPage() {
                   {m.sections.map((x) => x[0].toUpperCase() + x.slice(1)).join(" · ") || "No sections yet"}
                 </p>
                 <div className="mt-auto text-sm font-semibold text-gray-900 group-hover:underline">
-                  {state === "done" ? "See results →" : state === "progress" ? "Continue →" : "Open →"}
+                  {state === "done" ? "Results & retake →" : state === "progress" ? "Continue →" : "Open →"}
                 </div>
               </Link>
             );
